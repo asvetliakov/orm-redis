@@ -74,23 +74,12 @@ export class Connection {
         try {
             this.initPubSubListener();
             const subscribers = this.loadEntitySubscribers(this.options.entitySubscribers);
-            // tslint:disable-next-line:no-unused-expression
-            subscribers;
+            this.manager = new RedisManager(this, subscribers);
             this.isConnected = true;
         } catch (e) {
             await this.disconnect();
             throw e;
         }
-        // this.redisClient = redis.createClient();
-        // await this.redisClient.connect();
-        // try {
-        //   const subscribers = this.loadSubscribers();
-        //   this.manager = new RedisManager(this, subscribers)
-        // } catch (e) {
-        //
-        // }
-        // this.manager = new RedisManager();
-        
     }
 
     /**

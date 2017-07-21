@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getRedisHashProperties() Returns properties for even hash instance or hash constructor 1`] = `
+Array [
+  Object {
+    "isIdentifyColumn": true,
+    "isRelation": false,
+    "propertyName": "id",
+    "propertyRedisName": "id",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "prop2",
+    "propertyRedisName": "prop2",
+    "propertyType": [Function],
+  },
+]
+`;
+
+exports[`getRedisHashProperties() Returns properties for even hash instance or hash constructor 2`] = `
+Array [
+  Object {
+    "isIdentifyColumn": true,
+    "isRelation": false,
+    "propertyName": "id",
+    "propertyRedisName": "id",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "prop2",
+    "propertyRedisName": "prop2",
+    "propertyType": [Function],
+  },
+]
+`;

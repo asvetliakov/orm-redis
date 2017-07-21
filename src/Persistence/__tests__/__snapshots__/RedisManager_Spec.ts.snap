@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Save Saves simple entity 1`] = `
+Array [
+  Object {
+    "boolProp": "b:1",
+    "id": "i:1",
+    "map1": "m:e:A:1:map1",
+    "prop1": "s:abc",
+    "prop3": "d:1478769010000",
+    "prop4": "j:{\\"a\\":\\"abc\\",\\"d\\":5}",
+    "set1": "a:e:A:1:set1",
+  },
+  Object {
+    "i:1": "s:number1",
+    "i:2": "b:1",
+    "i:3": "d:1478769010000",
+    "s:1": "s:string1",
+  },
+  Array [
+    "b:1",
+    "s:3",
+    "i:1",
+    "i:2",
+  ],
+]
+`;

@@ -1,7 +1,7 @@
 import { Hash } from "../../Decorators/Hash";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
-import { getRedisHashId, getRedisHashName, isRedisHash } from "../Metadata";
+import { getRedisHashId, getRedisHashName, getRedisHashProperties, isRedisHash } from "../Metadata";
 
 describe("isRedisHash()", () => {
     it("returns false for non objects", () => {
@@ -86,5 +86,25 @@ describe("getRedisHashName()", () => {
         expect(getRedisHashName(A)).toBe("A");
         expect(getRedisHashName(new B())).toBe("test");
         expect(getRedisHashName(B)).toBe("test");
+    });
+});
+
+describe("getRedisHashProperties()", () => {
+    it("Returns properties for even hash instance or hash constructor", () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+            @Property()
+            public prop2: string;
+        }
+        expect(getRedisHashProperties(A)).toMatchSnapshot();
+        expect(getRedisHashProperties(new A())).toMatchSnapshot();
+    });
+
+    it("Returns undefined for non hashes", () => {
+        class A { }
+        expect(getRedisHashProperties({})).toBeUndefined();
+        expect(getRedisHashProperties(A)).toBeUndefined();
     });
 });

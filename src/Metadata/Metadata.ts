@@ -154,3 +154,14 @@ export function getRedisHashId(hash: { [key: string]: any }): string | number | 
     }
     return undefined;
 }
+
+/**
+ * Returns redis properties metadata
+ * 
+ * @export
+ * @param hashOrHashClass 
+ * @returns 
+ */
+export function getRedisHashProperties(hashOrHashClass: object | Function): PropertyMetadata[] | undefined {
+    return Reflect.getMetadata(REDIS_PROPERTIES, typeof hashOrHashClass === "function" ? hashOrHashClass : hashOrHashClass.constructor);
+}

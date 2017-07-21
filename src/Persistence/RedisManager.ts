@@ -1,4 +1,5 @@
 import { Connection } from "../Connection/Connection";
+import { getRedisHashProperties, isRedisHash, PropertyMetadata } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
 import { Operator } from "./Operator";
 
@@ -32,6 +33,7 @@ export class RedisManager {
     public constructor(connection: Connection, subscribers: Array<EntitySubscriberInterface<any>>) {
         this.connection = connection;
         this.subscribers = subscribers;
+        this.operator = new Operator();
     }
     
     /**
@@ -43,10 +45,16 @@ export class RedisManager {
      */
     public async save<T extends object>(entity: T): Promise<void> {
         const operation = this.operator.getSaveOperation(entity);
-        const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === entity.constructor);
-        if (subscriber && subscriber.beforeSave) {
-            subscriber.beforeSave(entity);
-        }
+        const allEntities = this.getEntitiesForSubscribers(entity);
+
+        // Call entities subscribers
+        allEntities.reduceRight((prev, current) => {
+            const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === current.constructor);
+            if (subscriber && subscriber.beforeSave) {
+                subscriber.beforeSave(current);
+            }
+            return prev;
+        }, {});
         // Do operation
         await this.connection.transaction(executor => {
             for (const deleteSet of operation.deletesSets) {
@@ -72,11 +80,16 @@ export class RedisManager {
                 }
             }
         });
-        // Update/set metadata
+        // update metadata
         this.operator.updateMetadataInHash(entity);
-        if (subscriber && subscriber.afterSave) {
-            subscriber.afterSave(entity);
-        }
+        // Call entities subscribers
+        allEntities.reduceRight((prev, current) => {
+            const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === current.constructor);
+            if (subscriber && subscriber.afterSave) {
+                subscriber.afterSave(current);
+            }
+            return prev;
+        }, {});
     }
 
     
@@ -97,5 +110,43 @@ export class RedisManager {
 
     public async remove<T>(entity: T): Promise<void> { 
 
+    }
+
+
+    /**
+     * Return all entities including relating intities when cascading is needed
+     * 
+     * @private
+     * @param entity 
+     * @param [entities=[]] 
+     * @returns 
+     */
+    private getEntitiesForSubscribers(entity: { [key: string]: any }, entities: object[] = []): object[] {
+        if (!isRedisHash(entity) || entities.includes(entities)) {
+            return entities;
+        }
+        entities.push(entity);
+        const metadata = getRedisHashProperties(entity); 
+        if (!metadata) {
+            return entities;
+        }
+        for (const propMetadata of metadata) {
+            // no need to process non relations or without cascading options
+            if (!propMetadata.isRelation || !(propMetadata.relationOptions.cascadeInsert || propMetadata.relationOptions.cascadeUpdate)) {
+                continue;
+            }
+            const propValue = entity[propMetadata.propertyName];
+            if (!propValue) {
+                continue;
+            }
+            if (propValue instanceof Map || propValue instanceof Set) {
+                for (const collVal of propValue.values()) {
+                    this.getEntitiesForSubscribers(collVal, entities);
+                }
+            } else {
+                this.getEntitiesForSubscribers(propValue, entities);
+            }
+        }
+        return entities;
     }
 }
