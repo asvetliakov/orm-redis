@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Defines metadata For set or map of relations 1`] = `
+Array [
+  Object {
+    "isRelation": true,
+    "propertyName": "test",
+    "propertyRedisName": "test",
+    "propertyType": [Function],
+    "relationOptions": Object {
+      "cascadeInsert": false,
+      "cascadeUpdate": false,
+    },
+    "relationType": [Function],
+  },
+  Object {
+    "isRelation": true,
+    "propertyName": "test2",
+    "propertyRedisName": "test2",
+    "propertyType": [Function],
+    "relationOptions": Object {
+      "cascadeInsert": false,
+      "cascadeUpdate": false,
+    },
+    "relationType": [Function],
+  },
+]
+`;
+
+exports[`Defines metadata With default values 1`] = `
+Array [
+  Object {
+    "isRelation": true,
+    "propertyName": "test",
+    "propertyRedisName": "test",
+    "propertyType": [Function],
+    "relationOptions": Object {
+      "cascadeInsert": false,
+      "cascadeUpdate": false,
+    },
+    "relationType": [Function],
+  },
+]
+`;
+
+exports[`Defines metadata With relation options 1`] = `
+Array [
+  Object {
+    "isRelation": true,
+    "propertyName": "test",
+    "propertyRedisName": "testName",
+    "propertyType": [Function],
+    "relationOptions": Object {
+      "cascadeInsert": false,
+      "cascadeUpdate": true,
+      "propertyName": "testName",
+    },
+    "relationType": [Function],
+  },
+]
+`;

@@ -1,0 +1,8 @@
+version: '2.1'
+
+services:
+  redis:
+    image: redis:3-alpine
+    ports:
+      - 6379:6379
+    restart: on-failure

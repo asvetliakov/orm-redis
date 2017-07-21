@@ -1,0 +1,1293 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Load Return load operation for hash with non relation sets or maps 1`] = `
+Object {
+  "loadHashes": Array [
+    "e:E:1",
+    "e:E:1:map",
+  ],
+  "loadRelationHashes": Array [],
+  "loadRelationSets": Array [],
+  "loadSets": Array [
+    "e:E:1:set",
+  ],
+}
+`;
+
+exports[`Load Return load operation for hash with relation sets or maps 1`] = `
+Object {
+  "loadHashes": Array [
+    "e:E:1",
+  ],
+  "loadRelationHashes": Array [
+    "e:E:1:map",
+  ],
+  "loadRelationSets": Array [
+    "e:E:1:set",
+  ],
+  "loadSets": Array [],
+}
+`;
+
+exports[`Load Return load operation for map/sets with specified redis name 1`] = `
+Object {
+  "loadHashes": Array [
+    "e:E:1",
+    "e:E:1:myMap2",
+  ],
+  "loadRelationHashes": Array [
+    "e:E:1:myMap",
+  ],
+  "loadRelationSets": Array [
+    "e:E:1:mySet",
+  ],
+  "loadSets": Array [
+    "e:E:1:mySet2",
+  ],
+}
+`;
+
+exports[`Load Return load operation for simple hash 1`] = `
+Object {
+  "loadHashes": Array [
+    "e:E:1",
+  ],
+  "loadRelationHashes": Array [],
+  "loadRelationSets": Array [],
+  "loadSets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Allows multiple keys to same relation object 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "m:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "i:3": "e:Rel:1",
+        "i:4": "e:Rel:2",
+        "s:2": "e:Rel:2",
+        "s:4": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1:rels",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "prop": "s:rel1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "prop": "s:rel2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Save cyclic relations with cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "bMap": "m:e:A:1:bMap",
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:B:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1:bMap",
+    },
+    Object {
+      "changeKeys": Object {
+        "aMap": "m:e:B:1:aMap",
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:B:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:A:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:B:1:aMap",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Save hash with relation in maps with cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "m:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "s:2": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1:rels",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "prop": "s:rel1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "prop": "s:rel2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Save hash with relation in maps without cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "m:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "i:2": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1:rels",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Save nested relations in maps with cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "m:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "i:2": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1:rels",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "insideRel": "e:AnotherRel:1",
+        "prop": "s:rel1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "prop": "s:another rel",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:AnotherRel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "insideRel": "e:AnotherRel:1",
+        "prop": "s:rel2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Tracks changes in relations with cascadeUpdate 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "i:2": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1:rels",
+    },
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "prop": "s:changed prop",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Tracks deletion/addition of relations in relation map 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:3",
+        "i:3": "e:Rel:3",
+      },
+      "deleteKeys": Array [
+        "i:2",
+      ],
+      "hashId": "e:E:1:rels",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:3",
+        "prop": "s:rel3",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:3",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in maps Works when replacing relation map with new object 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [
+        "i:1",
+      ],
+      "hashId": "e:E:1:rels",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Save cyclic relations with cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "bSet": "a:e:A:1:bSet",
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "aSet": "a:e:B:1:aSet",
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:B:1",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:B:1",
+      ],
+      "removeValues": Array [],
+      "setName": "e:A:1:bSet",
+    },
+    Object {
+      "addValues": Array [
+        "e:A:1",
+      ],
+      "removeValues": Array [],
+      "setName": "e:B:1:aSet",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Save hash with relation in sets with cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "a:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "prop": "s:rel1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "prop": "s:rel2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:Rel:1",
+        "e:Rel:2",
+      ],
+      "removeValues": Array [],
+      "setName": "e:E:1:rels",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Save hash with relation in sets without cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "a:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:Rel:1",
+        "e:Rel:2",
+      ],
+      "removeValues": Array [],
+      "setName": "e:E:1:rels",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Save nested relations in sets with cascade insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rels": "a:e:E:1:rels",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "insideRel": "e:AnotherRel:1",
+        "prop": "s:rel1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "prop": "s:another rel",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:AnotherRel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "insideRel": "e:AnotherRel:1",
+        "prop": "s:rel2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:Rel:1",
+        "e:Rel:2",
+      ],
+      "removeValues": Array [],
+      "setName": "e:E:1:rels",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Tracks changes in relations with cascadeUpdate 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "prop": "s:changed prop",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [],
+      "removeValues": Array [],
+      "setName": "e:E:1:rels",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Tracks deletion/addition of relations in set 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:3",
+        "prop": "s:rel3",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:3",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:Rel:3",
+      ],
+      "removeValues": Array [
+        "e:Rel:2",
+      ],
+      "setName": "e:E:1:rels",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Works when replacing relation set with new object 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:E:1",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [],
+      "removeValues": Array [
+        "e:Rel:1",
+      ],
+      "setName": "e:E:1:rels",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Process Map and Sets in properties 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "anotherSet": "a:e:A:1:anotherSet",
+        "id": "i:1",
+        "map1": "m:e:A:1:map1",
+        "map2": "null",
+        "map4": "m:e:A:1:map4",
+        "set1": "a:e:A:1:set1",
+        "set3": "a:e:A:1:set3",
+        "set4": "null",
+        "set6": "a:e:A:1:set6",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:8": "s:aaa",
+        "s:1": "i:1",
+        "s:2": "i:2",
+        "s:3": "b:1",
+        "s:4": "s:abc",
+        "s:5": "j:{\\"a\\":\\"def\\"}",
+        "s:7": "null",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1:map1",
+    },
+    Object {
+      "changeKeys": Object {
+        "s:1": "b:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1:map4",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "i:1",
+        "i:2",
+        "i:3",
+      ],
+      "removeValues": Array [],
+      "setName": "e:A:1:set1",
+    },
+    Object {
+      "addValues": Array [
+        "s:1",
+        "s:2",
+        "s:3",
+      ],
+      "removeValues": Array [],
+      "setName": "e:A:1:anotherSet",
+    },
+    Object {
+      "addValues": Array [
+        "s:1",
+        "null",
+        "b:1",
+      ],
+      "removeValues": Array [],
+      "setName": "e:A:1:set3",
+    },
+    Object {
+      "addValues": Array [
+        "s:1",
+        "s:2",
+      ],
+      "removeValues": Array [],
+      "setName": "e:A:1:set6",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Process simple properties 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "anotherBool": "b:1",
+        "identify": "i:1",
+        "prop1": "i:10.4",
+        "prop10": "j:[\\"abc\\",\\"def\\"]",
+        "prop11": "null",
+        "prop2": "s:test1",
+        "prop3": "b:0",
+        "prop6": "d:1478772610000",
+        "prop7": "null",
+        "prop9": "j:{\\"a\\":true,\\"b\\":\\"abc\\"}",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Process simple properties 2`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+  ],
+  "deletesSets": Array [],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Simple map and sets changing and updating Changing 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1:mapToNull",
+    "e:A:1:mapToUndefined",
+    "e:A:1:mapEmptied",
+  ],
+  "deletesSets": Array [
+    "e:A:1:setToNull",
+    "e:A:1:setToUndefined",
+    "e:A:1:setEmptied",
+  ],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "createdNewMap": "m:e:A:1:createdNewMap",
+        "createdNewSet": "a:e:A:1:createdNewSet",
+        "mapToNull": "null",
+        "setToNull": "null",
+      },
+      "deleteKeys": Array [
+        "setToUndefined",
+        "setEmptied",
+        "mapToUndefined",
+        "mapEmptied",
+      ],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "s:5": "j:{\\"a\\":\\"111\\"}",
+        "s:8": "s:abcdef",
+      },
+      "deleteKeys": Array [
+        "s:6",
+        "s:7",
+      ],
+      "hashId": "e:A:1:mapChanged",
+    },
+    Object {
+      "changeKeys": Object {
+        "s:1": "s:abcde",
+        "s:2": "s:test",
+        "s:3": "i:5",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1:createdNewMap",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "i:4",
+      ],
+      "removeValues": Array [
+        "i:1",
+      ],
+      "setName": "e:A:1:setModified",
+    },
+    Object {
+      "addValues": Array [
+        "s:10",
+        "s:11",
+      ],
+      "removeValues": Array [],
+      "setName": "e:A:1:createdNewSet",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Simple map and sets changing and updating Deleting entity with related maps/sets 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+    "e:A:1:mapChanged",
+    "e:A:1:mapToNull",
+    "e:A:1:mapToUndefined",
+    "e:A:1:mapEmptied",
+  ],
+  "deletesSets": Array [
+    "e:A:1:setModified",
+    "e:A:1:setToNull",
+    "e:A:1:setToUndefined",
+    "e:A:1:setEmptied",
+  ],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Simple values and updating/deleting over existing redis value 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "prop1": "i:4.5",
+        "prop10": "j:[\\"111\\",\\"def\\"]",
+        "prop11": "j:{\\"def\\":\\"def\\"}",
+        "prop2": "s:modified1",
+        "prop3": "b:1",
+        "prop5": "null",
+        "prop6": "d:1481364610000",
+        "prop7": "s:fromnull",
+        "prop8": "i:5",
+        "prop9": "j:{\\"a\\":false,\\"b\\":\\"abc\\"}",
+      },
+      "deleteKeys": Array [
+        "prop4",
+      ],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Change in relation with cascade update 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "relTest": "s:new test",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Change in relation without cascade update 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Complex and nested relations and cascade ops Delete 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+  ],
+  "deletesSets": Array [],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Complex and nested relations and cascade ops Insert 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rel": "e:Rel:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "anotherRel": "e:AnotherRel:1",
+        "id": "i:1",
+        "map1": "m:e:Rel:1:map1",
+        "set1": "a:e:Rel:1:set1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "s:1": "s:sometext",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1:map1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "text": "s:another rel",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:AnotherRel:1",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "s:1",
+        "s:2",
+        "s:3",
+      ],
+      "removeValues": Array [],
+      "setName": "e:Rel:1:set1",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Complex and nested relations and cascade ops Updating 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1:map1",
+    },
+    Object {
+      "changeKeys": Object {
+        "text": "s:some new text",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:AnotherRel:1",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [],
+      "removeValues": Array [],
+      "setName": "e:Rel:1:set1",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Complex and nested relations and cascade ops Updating 2`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "anotherRel": "e:AnotherRel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1:map1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "text": "s:new text",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:AnotherRel:2",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [],
+      "removeValues": Array [],
+      "setName": "e:Rel:1:set1",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Complex and nested relations and cascade ops Updating 3`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "rel": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "anotherRel": "e:AnotherRel:1",
+        "id": "i:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "text": "s:another rel",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:AnotherRel:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Delete with relation doesn't delete relation itself 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+  ],
+  "deletesSets": Array [],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Prevents circular references when inserting 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "bTest": "e:B:1",
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "aTest": "e:A:1",
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:B:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Prevents circular references when updating 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "relTest": "s:olo test",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:B:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Saves new relation over previous relation with cascade inserting 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rel": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:2",
+        "relTest": "s:test",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:2",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Saves new relation over previous relation without cascade inserting 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rel": "e:Rel:2",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Saves new relation with cascade inserting 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rel": "e:Rel:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "relTest": "s:test",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Saves new relation without cascade inserting 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+        "rel": "e:Rel:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Set relation from null to undefined 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [
+        "rel",
+      ],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Set relation to null 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "rel": "null",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Set relation to undefined 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [
+        "rel",
+      ],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Update relation with cascadeUpdate 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "relTest": "s:new test",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Single relation Update relation without cascadeUpdate 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {},
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;

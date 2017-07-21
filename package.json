@@ -1,0 +1,70 @@
+{
+  "name": "orm-redis",
+  "version": "1.0.0",
+  "description": "ORM Like Redis mapper for Typescript",
+  "main": "index.js",
+  "scripts": {
+    "clean": "node ./helpers/clean.js",
+    "ts": "tsc",
+    "ts:watch": "tsc -w",
+    "test": "cross-env REDIS_HOST=localhost REDIS_PORT=6379 jest",
+    "lint": "tslint 'src/**/*'",
+    "build": "run-s clean ts lint",
+    "test:coverage": "cross-env REDIS_HOST=localhost REDIS_PORT=6379 jest --coverage --no-cache"
+  },
+  "author": "Alexey Svetliakov <asvetliakov@teledini.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^20.0.4",
+    "cross-env": "^5.0.1",
+    "del": "^3.0.0",
+    "jest": "^20.0.4",
+    "jest-environment-node-debug": "^2.0.0",
+    "npm-run-all": "^4.0.2",
+    "reflect-metadata": "^0.1.10",
+    "ts-jest": "^20.0.7",
+    "tslint": "^5.5.0",
+    "typescript": "^2.4.1"
+  },
+  "dependencies": {
+    "@types/redis": "^2.6.0",
+    "redis": "^2.7.1",
+    "sb-promisify": "^2.0.2"
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json"
+      }
+    },
+    "testEnvironment": "node",
+    "resetMocks": true,
+    "transform": {
+      "\\.(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|.*_[Ff]?[Ss]pec)\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "ts",
+      "tsx"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/index.ts",
+      "!src/testutils/**/*"
+    ],
+    "setupTestFrameworkScriptFile": "<rootDir>/helpers/test-helper.js",
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "cobertura"
+    ],
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "mapCoverage": true
+  }
+}

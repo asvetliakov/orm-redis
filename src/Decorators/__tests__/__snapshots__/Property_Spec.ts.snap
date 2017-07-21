@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Defines metadata 1`] = `
+Array [
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "one",
+    "propertyRedisName": "one",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "two",
+    "propertyRedisName": "twoName",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "three",
+    "propertyRedisName": "three",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "four",
+    "propertyRedisName": "four",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "five",
+    "propertyRedisName": "fiveName",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "six",
+    "propertyRedisName": "six",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "eight",
+    "propertyRedisName": "eight",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "nine",
+    "propertyRedisName": "nineName",
+    "propertyType": [Function],
+  },
+  Object {
+    "isIdentifyColumn": false,
+    "isRelation": false,
+    "propertyName": "eleven",
+    "propertyRedisName": "eleven",
+    "propertyType": [Function],
+  },
+]
+`;

@@ -1,0 +1,21 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "tsimporter.doubleQuotes": true,
+    "tslint.autoFixOnSave": true,
+    "tslint.alwaysShowRuleFailuresAsWarnings": true,
+    "docthis.includeTypes": false,
+    "docthis.includeMemberOfOnClassMembers": false,
+    "docthis.includeMemberOfOnInterfaceMembers": false,
+    "docthis.includeDescriptionTag": false,
+    "runCurrentTest.run": "npm run test -- ${relativeTestPath} --testNamePattern \"${fullTestName}\"",
+    "runCurrentTest.runAndUpdateSnapshots": "npm run test -- -u ${relativeTestPath} --testNamePattern \"${fullTestName}\"",
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "compiled": true
+    },
+    "snapshotTools.testFileExt": [
+        ".tsx",
+        ".ts"
+    ]
+}

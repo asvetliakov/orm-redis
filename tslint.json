@@ -1,0 +1,151 @@
+{
+    "rules": {
+        "align": [
+            true,
+            "statements",
+            "members",
+            "elements"
+        ],
+        "class-name": true,
+        "comment-format": [
+            false,
+            "check-space"
+        ],
+        "curly": true,
+        "indent": [
+            true,
+            "spaces"
+        ],
+        "jsdoc-format": true,
+        "member-access": [
+            true,
+            "check-accessor",
+            "check-constructor"
+        ],
+        "member-ordering": [
+            true,
+            {
+                "order": "instance-sandwich"
+            }
+        ],
+        "new-parens": true,
+        "no-angle-bracket-type-assertion": true,
+        "no-arg": true,
+        "no-conditional-assignment": true,
+        "no-construct": true,
+        "no-parameter-properties": true,
+        "no-debugger": true,
+        "no-duplicate-variable": true,
+        "no-duplicate-super": true,
+        "no-eval": true,
+        "no-internal-module": true,
+        "no-namespace": [
+            true,
+            "allow-declarations"
+        ],
+        "no-trailing-whitespace": false,
+        // "no-use-before-declare": true,
+        "no-var-keyword": true,
+        "no-var-requires": true,
+        "no-invalid-template-strings": true,
+        "no-invalid-this": [
+            true,
+            "check-function-in-method"
+        ],
+        "import-spacing": true,
+        "object-literal-sort-keys": false,
+        "one-line": [
+            true,
+            "check-catch",
+            "check-else",
+            "check-finally",
+            "check-open-brace",
+            "check-whitespace"
+        ],
+        "one-variable-per-declaration": [
+            true,
+            "ignore-for-loop"
+        ],
+        "quotemark": [
+            true,
+            "double",
+            "jsx-double",
+            "avoid-escape"
+        ],
+        "semicolon": [
+            true,
+            "always"
+        ],
+        "triple-equals": [
+            true,
+            "allow-null-check"
+        ],
+        "typedef": [
+            true,
+            "parameter",
+            "property-declaration"
+        ],
+        "typedef-whitespace": [
+            true,
+            {
+                "call-signature": "nospace",
+                "index-signature": "nospace",
+                "parameter": "nospace",
+                "property-declaration": "nospace",
+                "variable-declaration": "nospace"
+            },
+            {
+                "call-signature": "space",
+                "index-signature": "space",
+                "parameter": "space",
+                "property-declaration": "space",
+                "variable-declaration": "space"
+            }
+        ],
+        "variable-name": [
+            true,
+            "check-format",
+            "allow-pascal-case",
+            "ban-keywords",
+            "allow-leading-underscore"
+        ],
+        "whitespace": [
+            true,
+            "check-branch",
+            "check-decl",
+            "check-operator",
+            "check-module",
+            "check-separator",
+            "check-type"
+        ],
+        // Tslint 4.0
+        "adjacent-overload-signatures": true,
+        "array-type": [
+            true,
+            "array-simple"
+        ],
+        "no-unsafe-finally": true,
+        "no-unused-expression": true,
+        "object-literal-key-quotes": [
+            true,
+            "as-needed"
+        ],
+        "prefer-for-of": true,
+        "prefer-const": true,
+        // "strict-boolean-expressions": true,
+        "prefer-method-signature": true,
+        "no-magic-numbers": false,
+        // "promise-function-async": true,
+        // "no-inferred-empty-object-type": true,
+        "no-string-throw": true,
+        // "no-empty-interface": true,
+        "no-null-keyword": false,
+        "interface-over-type-literal": true,
+        // "no-void-expression": true,
+        "ordered-imports": [
+            true
+        ],
+        // Tslint 4.3
+        "typeof-compare": true
+    }
+}

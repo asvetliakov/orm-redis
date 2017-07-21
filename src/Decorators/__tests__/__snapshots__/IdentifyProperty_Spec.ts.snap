@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Defines metadata with custom name 1`] = `
+Array [
+  Object {
+    "isIdentifyColumn": true,
+    "isRelation": false,
+    "propertyName": "id",
+    "propertyRedisName": "somename",
+    "propertyType": [Function],
+  },
+]
+`;
+
+exports[`Defines metadata without custom name 1`] = `
+Array [
+  Object {
+    "isIdentifyColumn": true,
+    "isRelation": false,
+    "propertyName": "id",
+    "propertyRedisName": "id",
+    "propertyType": [Function],
+  },
+]
+`;
