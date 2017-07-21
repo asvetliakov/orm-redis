@@ -319,7 +319,282 @@ describe("Save", () => {
         expect(res).toMatchSnapshot();
     });
 
-    it.skip("Doesn't touch relation if loaded entity without it", async () => {
+    it.skip("Doesn't touch relation if it was skipped for loading", async () => {
+
+    });
+
+    it("Saves only links to multiple relations without cascade insert", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop1: string;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: string = "1";
+
+            @RelationProperty(type => [Rel, Set])
+            public mySet: Set<Rel> = new Set();
+
+            @RelationProperty(type => [Rel, Map])
+            public myMap: Map<number, Rel> = new Map();
+        }
+
+        const a = new A();
+        const rel1 = new Rel();
+        rel1.id = 1;
+        rel1.prop1 = "uno";
+        const rel2 = new Rel();
+        rel2.id = 2;
+        rel2.prop1 = "dos";
+        const rel3 = new Rel();
+        rel3.id = 3;
+        rel3.prop1 = "tres";
+        const rel4 = new Rel();
+        rel4.id = 4;
+        rel4.prop1 = "cuatro";
+
+        a.mySet.add(rel1);
+        a.mySet.add(rel2);
+        a.myMap.set(1, rel3);
+        a.myMap.set(2, rel4);
+
+        await manager.save(a);
+        const res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.smembersAsync("e:A:1:mySet"),
+            conn.client.hgetallAsync("e:A:1:myMap"),
+            conn.client.hgetallAsync("e:Rel:1"),
+            conn.client.hgetallAsync("e:Rel:2"),
+            conn.client.hgetallAsync("e:Rel:3"),
+            conn.client.hgetallAsync("e:Rel:4"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Saves multiple relations with cascade insert", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop1: string;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: string = "1";
+
+            @RelationProperty(type => [Rel, Set], { cascadeInsert: true })
+            public mySet: Set<Rel> = new Set();
+
+            @RelationProperty(type => [Rel, Map], { cascadeInsert: true })
+            public myMap: Map<number, Rel> = new Map();
+        }
+
+        const a = new A();
+        const rel1 = new Rel();
+        rel1.id = 1;
+        rel1.prop1 = "uno";
+        const rel2 = new Rel();
+        rel2.id = 2;
+        rel2.prop1 = "dos";
+        const rel3 = new Rel();
+        rel3.id = 3;
+        rel3.prop1 = "tres";
+        const rel4 = new Rel();
+        rel4.id = 4;
+        rel4.prop1 = "cuatro";
+
+        a.mySet.add(rel1);
+        a.mySet.add(rel2);
+        a.myMap.set(1, rel3);
+        a.myMap.set(2, rel4);
+
+        await manager.save(a);
+        const res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.smembersAsync("e:A:1:mySet"),
+            conn.client.hgetallAsync("e:A:1:myMap"),
+            conn.client.hgetallAsync("e:Rel:1"),
+            conn.client.hgetallAsync("e:Rel:2"),
+            conn.client.hgetallAsync("e:Rel:3"),
+            conn.client.hgetallAsync("e:Rel:4"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Saves multiple cyclic relations with cascade insert", async () => {
+        @Hash()
+        class AnotherRel {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop2: boolean;
+
+            public a: A;
+        }
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop1: string;
+
+            @RelationProperty(type => [AnotherRel, AnotherRel], { cascadeInsert: true })
+            public rel2: AnotherRel;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: string = "1";
+
+            @RelationProperty(type => [Rel, Set], { cascadeInsert: true })
+            public mySet: Set<Rel> = new Set();
+
+            @RelationProperty(type => [AnotherRel, Map], { cascadeInsert: true })
+            public myMap: Map<number, AnotherRel> = new Map();
+        }
+
+        const a = new A();
+        const anotherRel1 = new AnotherRel();
+        RelationProperty(type => [A, A], { cascadeInsert: true })(anotherRel1, "a");
+        anotherRel1.id = 1;
+        anotherRel1.a = a;
+        const anotherRel2 = new AnotherRel();
+        RelationProperty(type => [A, A], { cascadeInsert: true })(anotherRel2, "a");
+        anotherRel2.id = 2;
+        anotherRel2.a = a;
+
+        const rel1 = new Rel();
+        rel1.id = 1;
+        rel1.prop1 = "uno";
+        rel1.rel2 = anotherRel1;
+        const rel2 = new Rel();
+        rel2.id = 2;
+        rel2.prop1 = "dos";
+        rel2.rel2 = anotherRel1;
+        const rel3 = new Rel();
+        rel3.id = 3;
+        rel3.prop1 = "tres";
+        rel3.rel2 = anotherRel2;
+        const rel4 = new Rel();
+        rel4.id = 4;
+        rel4.prop1 = "cuatro";
+        rel4.rel2 = anotherRel2;
+
+        a.mySet.add(rel1);
+        a.mySet.add(rel2);
+        a.mySet.add(rel3);
+        a.mySet.add(rel4);
+        a.myMap.set(1, anotherRel1);
+        a.myMap.set(2, anotherRel2);
+
+        await manager.save(a);
+        const res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.smembersAsync("e:A:1:mySet"),
+            conn.client.hgetallAsync("e:A:1:myMap"),
+            conn.client.hgetallAsync("e:Rel:1"),
+            conn.client.hgetallAsync("e:Rel:2"),
+            conn.client.hgetallAsync("e:Rel:3"),
+            conn.client.hgetallAsync("e:Rel:4"),
+            conn.client.hgetallAsync("e:AnotherRel:1"),
+            conn.client.hgetallAsync("e:AnotherRel:2"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Updates relations in maps/sets with cascade update", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop1: string;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: string = "1";
+
+            @RelationProperty(type => [Rel, Set], { cascadeInsert: true, cascadeUpdate: true })
+            public mySet: Set<Rel> = new Set();
+
+            @RelationProperty(type => [Rel, Map], { cascadeInsert: true, cascadeUpdate: true })
+            public myMap: Map<number, Rel> | undefined = new Map();
+        }
+        const a = new A();
+        const rel1 = new Rel();
+        rel1.id = 1;
+        rel1.prop1 = "test";
+        const rel2 = new Rel();
+        rel2.id = 2;
+        rel2.prop1 = "test2";
+        a.mySet.add(rel1).add(rel2);
+        a.myMap!.set(1, rel1).set(2, rel2);
+
+        await manager.save(a);
+        await monitor.clearMonitorCalls(100);
+
+        rel1.prop1 = "new test";
+        a.myMap = undefined;
+        await manager.save(a);
+        await monitor.wait(100);
+        expect(monitor.requests).toMatchSnapshot();
+
+        const res = await conn.client.hgetallAsync("e:Rel:1");
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Doesn't update relations in maps/sets without cascade update", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop1: string;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: string = "1";
+
+            @RelationProperty(type => [Rel, Set], { cascadeInsert: true, cascadeUpdate: false })
+            public mySet: Set<Rel> = new Set();
+        }
+        const a = new A();
+        const rel1 = new Rel();
+        rel1.id = 1;
+        rel1.prop1 = "test";
+        a.mySet.add(rel1);
+
+        await manager.save(a);
+        await monitor.clearMonitorCalls(100);
+
+        rel1.prop1 = "new test";
+        await manager.save(a);
+        await monitor.wait(100);
+        expect(monitor.requests).toHaveLength(0);
+        const res = await conn.client.hgetallAsync("e:Rel:1");
+        expect(res).toMatchSnapshot();
+    });
+
+    it.skip("Doesn't delete relations in maps and sets if skipped them for loading", () => {
 
     });
 });

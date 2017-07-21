@@ -1,5 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Save Doesn't update relations in maps/sets without cascade update 1`] = `
+Object {
+  "id": "i:1",
+  "prop1": "s:test",
+}
+`;
+
 exports[`Save Doesn't update single relation without cascade update 1`] = `Array []`;
 
 exports[`Save Doesn't update single relation without cascade update 2`] = `
@@ -20,6 +27,88 @@ Array [
     "a": "e:A:1",
     "id": "i:1",
     "prop": "s:I'm b",
+  },
+]
+`;
+
+exports[`Save Saves multiple cyclic relations with cascade insert 1`] = `
+Array [
+  Object {
+    "id": "s:1",
+    "myMap": "m:e:A:1:myMap",
+    "mySet": "a:e:A:1:mySet",
+  },
+  Array [
+    "e:Rel:2",
+    "e:Rel:1",
+    "e:Rel:4",
+    "e:Rel:3",
+  ],
+  Object {
+    "i:1": "e:AnotherRel:1",
+    "i:2": "e:AnotherRel:2",
+  },
+  Object {
+    "id": "i:1",
+    "prop1": "s:uno",
+    "rel2": "e:AnotherRel:1",
+  },
+  Object {
+    "id": "i:2",
+    "prop1": "s:dos",
+    "rel2": "e:AnotherRel:1",
+  },
+  Object {
+    "id": "i:3",
+    "prop1": "s:tres",
+    "rel2": "e:AnotherRel:2",
+  },
+  Object {
+    "id": "i:4",
+    "prop1": "s:cuatro",
+    "rel2": "e:AnotherRel:2",
+  },
+  Object {
+    "a": "e:A:1",
+    "id": "i:1",
+  },
+  Object {
+    "a": "e:A:1",
+    "id": "i:2",
+  },
+]
+`;
+
+exports[`Save Saves multiple relations with cascade insert 1`] = `
+Array [
+  Object {
+    "id": "s:1",
+    "myMap": "m:e:A:1:myMap",
+    "mySet": "a:e:A:1:mySet",
+  },
+  Array [
+    "e:Rel:2",
+    "e:Rel:1",
+  ],
+  Object {
+    "i:1": "e:Rel:3",
+    "i:2": "e:Rel:4",
+  },
+  Object {
+    "id": "i:1",
+    "prop1": "s:uno",
+  },
+  Object {
+    "id": "i:2",
+    "prop1": "s:dos",
+  },
+  Object {
+    "id": "i:3",
+    "prop1": "s:tres",
+  },
+  Object {
+    "id": "i:4",
+    "prop1": "s:cuatro",
   },
 ]
 `;
@@ -133,6 +222,28 @@ Array [
 ]
 `;
 
+exports[`Save Saves only links to multiple relations without cascade insert 1`] = `
+Array [
+  Object {
+    "id": "s:1",
+    "myMap": "m:e:A:1:myMap",
+    "mySet": "a:e:A:1:mySet",
+  },
+  Array [
+    "e:Rel:2",
+    "e:Rel:1",
+  ],
+  Object {
+    "i:1": "e:Rel:3",
+    "i:2": "e:Rel:4",
+  },
+  null,
+  null,
+  null,
+  null,
+]
+`;
+
 exports[`Save Saves simple entity 1`] = `
 Array [
   Object {
@@ -181,6 +292,39 @@ Array [
   },
   null,
 ]
+`;
+
+exports[`Save Updates relations in maps/sets with cascade update 1`] = `
+Array [
+  Array [
+    "multi",
+  ],
+  Array [
+    "del",
+    "e:A:1:myMap",
+  ],
+  Array [
+    "hdel",
+    "e:A:1",
+    "myMap",
+  ],
+  Array [
+    "hmset",
+    "e:Rel:1",
+    "prop1",
+    "s:new test",
+  ],
+  Array [
+    "exec",
+  ],
+]
+`;
+
+exports[`Save Updates relations in maps/sets with cascade update 2`] = `
+Object {
+  "id": "i:1",
+  "prop1": "s:new test",
+}
 `;
 
 exports[`Save Updates single relation with with cascade updating 1`] = `
