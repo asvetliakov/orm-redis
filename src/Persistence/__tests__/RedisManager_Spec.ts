@@ -3,6 +3,7 @@ import { Hash } from "../../Decorators/Hash";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
 import { RelationProperty } from "../../Decorators/RelationProperty";
+import { EntitySubscriberInterface } from "../../Subscriber/EntitySubscriberInterface";
 import { cleanRedisConnection, createRedisConnection } from "../../testutils/redis";
 import { RedisTestMonitor } from "../../testutils/RedisTestMonitor";
 import { RedisManager } from "../RedisManager";
@@ -595,6 +596,124 @@ describe("Save", () => {
     });
 
     it.skip("Doesn't delete relations in maps and sets if skipped them for loading", () => {
+
+    });
+});
+
+describe("Runs entity subscribers", () => {
+    it("On save/update", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: number = 10;
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop1: string = "abc";
+
+            @RelationProperty(type => [A, A], { cascadeInsert: true, cascadeUpdate: true })
+            public a: A = new A();
+
+            @RelationProperty(type => [A, Set], { cascadeInsert: true, cascadeUpdate: true })
+            public set: Set<A> = new Set();
+
+            @RelationProperty(type => [A, Map], { cascadeInsert: true, cascadeUpdate: true })
+            public map: Map<number, A> = new Map();
+        }
+
+        const sub1: EntitySubscriberInterface<A> = {
+            listenTo: () => A,
+            beforeSave: jest.fn(),
+            afterSave: jest.fn()
+        };
+        const sub2: EntitySubscriberInterface<B> = {
+            listenTo: () => B,
+            beforeSave: jest.fn()
+        };
+        const manager = new RedisManager(conn, [sub1, sub2]);
+        const b = new B();
+        const a2 = new A();
+        a2.id = 2;
+        const a3 = new A();
+        a3.id = 3;
+        b.set.add(a2);
+        b.map.set(1, a3);
+
+        await manager.save(b);
+        expect(sub1.beforeSave).toBeCalledWith(b.a);
+        expect(sub1.beforeSave).toBeCalledWith(a2);
+        expect(sub1.beforeSave).toBeCalledWith(a3);
+        expect(sub1.afterSave).toBeCalledWith(b.a);
+        expect(sub1.afterSave).toBeCalledWith(a2);
+        expect(sub1.afterSave).toBeCalledWith(a3);
+        expect(sub2.beforeSave).toBeCalledWith(b);
+
+        sub1.beforeSave = jest.fn();
+        sub1.afterSave = jest.fn();
+        b.a.prop = 40;
+        a3.prop = 450;
+        await manager.save(b);
+        expect(sub1.beforeSave).toBeCalledWith(b.a);
+        expect(sub1.afterSave).toBeCalledWith(b.a);
+        expect(sub1.beforeSave).toBeCalledWith(a3);
+        expect(sub1.afterSave).toBeCalledWith(a3);
+        // beforeSave() is always being called regardless of pending changes
+        expect(sub1.beforeSave).toBeCalledWith(a2);
+        // No persistence changes for a2
+        expect(sub1.afterSave).not.toBeCalledWith(a2);
+        expect(sub2.beforeSave).toHaveBeenCalledTimes(2);
+    });
+
+    it("Doesn't call beforeSave/afterSave subscribers for non cascade deep relations", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: number = 10;
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @RelationProperty(type => A)
+            public prop1: A = new A();
+
+        }
+
+        const sub1: EntitySubscriberInterface<A> = {
+            listenTo: () => A,
+            beforeSave: jest.fn(),
+            afterSave: jest.fn()
+        };
+        const sub2: EntitySubscriberInterface<B> = {
+            listenTo: () => B,
+            beforeSave: jest.fn()
+        };
+        const manager = new RedisManager(conn, [sub1, sub2]);
+        const b = new B();
+
+        await manager.save(b);
+        expect(sub1.beforeSave).not.toBeCalled();
+        expect(sub1.afterSave).not.toBeCalled();
+    });
+
+    it("On delete", () => {
+
+    });
+
+    it("On load", () => {
 
     });
 });

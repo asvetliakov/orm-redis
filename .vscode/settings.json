@@ -17,5 +17,8 @@
     "snapshotTools.testFileExt": [
         ".tsx",
         ".ts"
+    ],
+    "tsimporter.filesToExclude": [
+        "./compiled/**/*"
     ]
 }

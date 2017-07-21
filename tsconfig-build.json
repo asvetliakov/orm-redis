@@ -26,8 +26,6 @@
     ],
     "exclude": [
         "**/*_Spec.*",
-        "node_modules",
-        "compiled",
         "src/testutils"
     ]
 }

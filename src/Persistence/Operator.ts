@@ -1,5 +1,5 @@
 import { DuplicateIdsInEntityError, MetadataError } from "../Errors/Errors";
-import { getRedisHashId, getRedisHashName, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_HASH, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
+import { getRedisHashFullId, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_HASH, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";
 /**
  * Hash key add/remove operation. This applies for creating new hash and for modifying existing hash
@@ -466,7 +466,7 @@ export class Operator {
      */
     public getLoadOperation(id: string | number, hashClass: Function): LoadOperation {
         this.checkMetadata(hashClass);
-        const fullHashId = this.getFullIdForHash(hashClass, id);
+        const fullHashId = this.getFullIdForHashClass(hashClass, id);
 
         const operation: LoadOperation = {
             loadHashes: [],
@@ -621,11 +621,12 @@ export class Operator {
      */
     private getFullIdForHashObject(entity: object): string {
         this.checkMetadata(entity);
-        const hashId = getRedisHashId(entity);
+        
+        const hashId = getRedisHashFullId(entity);
         if (typeof hashId === "undefined") {
             throw new MetadataError(entity.constructor, "Unable to to get hash id");
         }
-        return this.getFullIdForHash(entity.constructor, hashId);
+        return hashId;
     }
 
     /**
@@ -636,12 +637,12 @@ export class Operator {
      * @param id 
      * @returns 
      */
-    private getFullIdForHash(entityClass: Function, id: string | number): string {
-        const hashName = getRedisHashName(entityClass);
-        if (!hashName) {
+    private getFullIdForHashClass(entityClass: Function, id: string | number): string {
+        const hashId = getRedisHashFullId(entityClass, id);
+        if (!hashId) {
             throw new MetadataError(entityClass, "Not a redis hash. Perhaps you forgot to add @Hash decorator");
         }
-        return `e:${hashName}:${id}`;
+        return hashId;
     }
 
     /**

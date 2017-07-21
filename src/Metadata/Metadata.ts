@@ -165,3 +165,23 @@ export function getRedisHashId(hash: { [key: string]: any }): string | number | 
 export function getRedisHashProperties(hashOrHashClass: object | Function): PropertyMetadata[] | undefined {
     return Reflect.getMetadata(REDIS_PROPERTIES, typeof hashOrHashClass === "function" ? hashOrHashClass : hashOrHashClass.constructor);
 }
+
+/**
+ * Return full hash id
+ * 
+ * @export
+ * @param hashOrHashClass 
+ * @param [hashId]
+ * @returns 
+ */
+export function getRedisHashFullId(hashOrHashClass: object | Function, hashId?: string | number): string | undefined {
+    const name = getRedisHashName(hashOrHashClass);
+    const id = typeof hashId !== "undefined"
+        ? hashId
+        : typeof hashOrHashClass === "object"
+            ? getRedisHashId(hashOrHashClass)
+            : undefined;        
+    if (name && typeof id !== "undefined") {
+        return `e:${name}:${id}`;
+    }
+}

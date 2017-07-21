@@ -1,5 +1,5 @@
 import { Connection } from "../Connection/Connection";
-import { getRedisHashProperties, isRedisHash } from "../Metadata/Metadata";
+import { getRedisHashFullId, getRedisHashProperties, isRedisHash } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
 import { Operator, PersistenceOperation } from "./Operator";
 
@@ -44,54 +44,56 @@ export class RedisManager {
      * @returns 
      */
     public async save<T extends object>(entity: T): Promise<void> {
+        // Run beforeSave subscribers for all entities regardless will they be finally saved or no
+        // started from most deep relation entity to root entity
+        const allEntities = this.getEntitiesForSubscribers(entity).reverse();
+        for (const ent of allEntities) {
+            const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === ent.constructor);
+            if (subscriber && subscriber.beforeSave) {
+                subscriber.beforeSave(ent);
+            }
+        }
+
         const operation = this.operator.getSaveOperation(entity);
-        const allEntities = this.getEntitiesForSubscribers(entity);
+        if (this.isEmptyPersistenceOperation(operation)) {
+            return;
+        }
 
         // Call entities subscribers
-        allEntities.reduceRight((prev, current) => {
-            const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === current.constructor);
-            if (subscriber && subscriber.beforeSave) {
-                subscriber.beforeSave(current);
+        // Do operation
+        await this.connection.transaction(executor => {
+            for (const deleteSet of operation.deletesSets) {
+                executor.del(deleteSet);
             }
-            return prev;
-        }, {});
-        if (!this.isEmptyPersistenceOperation(operation)) {
-            // Do operation
-            await this.connection.transaction(executor => {
-                for (const deleteSet of operation.deletesSets) {
-                    executor.del(deleteSet);
+            for (const deleteHash of operation.deleteHashes) {
+                executor.del(deleteHash);
+            }
+            for (const modifySet of operation.modifySets) {
+                if (modifySet.removeValues.length > 0) {
+                    executor.srem(modifySet.setName, modifySet.removeValues);
                 }
-                for (const deleteHash of operation.deleteHashes) {
-                    executor.del(deleteHash);
+                if (modifySet.addValues.length > 0) {
+                    executor.sadd(modifySet.setName, modifySet.addValues);
                 }
-                for (const modifySet of operation.modifySets) {
-                    if (modifySet.removeValues.length > 0) {
-                        executor.srem(modifySet.setName, modifySet.removeValues);
-                    }
-                    if (modifySet.addValues.length > 0) {
-                        executor.sadd(modifySet.setName, modifySet.addValues);
-                    }
+            }
+            for (const modifyHash of operation.modifyHashes) {
+                if (modifyHash.deleteKeys.length > 0) {
+                    executor.hdel(modifyHash.hashId, modifyHash.deleteKeys);
                 }
-                for (const modifyHash of operation.modifyHashes) {
-                    if (modifyHash.deleteKeys.length > 0) {
-                        executor.hdel(modifyHash.hashId, modifyHash.deleteKeys);
-                    }
-                    if (Object.keys(modifyHash.changeKeys).length > 0) {
-                        executor.hmset(modifyHash.hashId, modifyHash.changeKeys);
-                    }
+                if (Object.keys(modifyHash.changeKeys).length > 0) {
+                    executor.hmset(modifyHash.hashId, modifyHash.changeKeys);
                 }
-            });
-        }
+            }
+        });
         // update metadata
         this.operator.updateMetadataInHash(entity);
         // Call entities subscribers
-        allEntities.reduceRight((prev, current) => {
-            const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === current.constructor);
+        for (const ent of this.filterEntitiesForPersistenceOperation(allEntities, operation)) {
+            const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === ent.constructor);
             if (subscriber && subscriber.afterSave) {
-                subscriber.afterSave(current);
+                subscriber.afterSave(ent);
             }
-            return prev;
-        }, {});
+        }
     }
 
     
@@ -116,10 +118,11 @@ export class RedisManager {
 
 
     /**
-     * Return all entities including relating intities when cascading is needed
+     * Return all entities which should fire related subscribers for save/update/delete operation
      * 
      * @private
      * @param entity 
+     * @param operation
      * @param [entities=[]] 
      * @returns 
      */
@@ -132,6 +135,7 @@ export class RedisManager {
         if (!metadata) {
             return entities;
         }
+        // const redisHash = getRedisHashId(entity);
         for (const propMetadata of metadata) {
             // no need to process non relations or without cascading options
             if (!propMetadata.isRelation || !(propMetadata.relationOptions.cascadeInsert || propMetadata.relationOptions.cascadeUpdate)) {
@@ -150,6 +154,36 @@ export class RedisManager {
             }
         }
         return entities;
+    }
+
+    /**
+     * Return entities which were somehow changed with given operation
+     * 
+     * @private
+     * @param entities 
+     * @param operation 
+     * @returns 
+     */
+    private filterEntitiesForPersistenceOperation(entities: object[], operation: PersistenceOperation): object[] {
+        return entities.filter(entity => {
+            const hashId = getRedisHashFullId(entity);
+            if (!hashId) {
+                return false;
+            }
+            if (operation.deleteHashes.find(name => name.includes(hashId))) {
+                return true;
+            }
+            if (operation.deletesSets.find(name => name.includes(hashId))) {
+                return true;
+            }
+            if (operation.modifyHashes.find(v => ((v.deleteKeys.length > 0 || Object.keys(v.changeKeys).length > 0) && v.hashId.includes(hashId)))) {
+                return true;
+            }
+            if (operation.modifySets.find(v => ((v.addValues.length > 0 || v.removeValues.length > 0) && v.setName.includes(hashId)))) {
+                return true;
+            }
+            return false;
+        });
     }
 
     /**

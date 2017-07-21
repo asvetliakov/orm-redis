@@ -1,16 +1,16 @@
 
 export interface EntitySubscriberInterface<T> {
-    listenTo(): T;
+    listenTo(): Function;
 
     beforeSave?(entity: T): Promise<void>;
     
     afterSave?(entity: T): Promise<void>;
     
-    beforeGet?(objectPayload: object): Promise<void>;
+    beforeLoad?(objectPayload: object): Promise<void>;
     
-    afterGet?(entity: T): Promise<void>;
+    afterLoad?(entity: T): Promise<void>;
     
     beforeRemove?(entity: T): Promise<void>;
     
-    afterRemove?(entity: T): Promise<void>;
+    afterRemove?(): Promise<void>;
 }

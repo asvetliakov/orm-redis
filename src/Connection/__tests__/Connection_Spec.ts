@@ -52,7 +52,7 @@ describe("Disconnects and throw error", () => {
             public constructor() {
                 throw new Error();
             }
-            public listenTo() { return; }
+            public listenTo(): Function { return undefined as any; }
         }
         try {
             const client = await createRedisConnection({
@@ -72,7 +72,7 @@ describe("Monitoring", () => {
         const loggerSpy = jest.fn();
         await conn.startMonitoring(loggerSpy);
         // need to wait sligtly
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         await conn.flushdb();
         expect(loggerSpy).toBeCalledWith(expect.any(String), ["flushdb"], expect.any(String));
@@ -81,7 +81,7 @@ describe("Monitoring", () => {
     it("Stops monitoring", async () => {
         const loggerSpy = jest.fn();
         await conn.startMonitoring(loggerSpy);
-        await new Promise(resolve => setTimeout(resolve, 80));
+        await new Promise(resolve => setTimeout(resolve, 200));
         await conn.stopMonitoring();
         
         await conn.client.pingAsync("test");
