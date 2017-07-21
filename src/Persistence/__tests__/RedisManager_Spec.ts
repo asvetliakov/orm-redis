@@ -119,7 +119,20 @@ describe("Save", () => {
         await manager.save(a);
         await monitor.wait(100);
         expect(monitor.requests).toMatchSnapshot();
-        const res = await Promise.all([
+        let res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.hgetallAsync("e:A:1:map1"),
+            conn.client.smembersAsync("e:A:1:set1")
+        ]);
+        expect(res).toMatchSnapshot();
+
+        await monitor.clearMonitorCalls(100);
+        a.set1.clear();
+        a.map1 = new Map<any, any>();
+        await manager.save(a);
+        await monitor.wait(100);
+        expect(monitor.requests).toMatchSnapshot();
+        res = await Promise.all([
             conn.client.hgetallAsync("e:A:1"),
             conn.client.hgetallAsync("e:A:1:map1"),
             conn.client.smembersAsync("e:A:1:set1")

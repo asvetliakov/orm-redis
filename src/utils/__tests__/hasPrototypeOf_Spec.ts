@@ -35,4 +35,5 @@ it("Works for functions", () => {
     E.prototype.constructor = E;
     expect(hasPrototypeOf(E, D)).toBeTruthy();
     expect(hasPrototypeOf(E, Map)).toBeTruthy();
+    expect(hasPrototypeOf(Object, Set)).toBeFalsy();
 });

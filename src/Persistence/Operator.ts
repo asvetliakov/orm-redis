@@ -511,7 +511,7 @@ export class Operator {
 
         const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, hashObject.constructor);
         for (const propMetadata of metadatas) {
-            if (hasPrototypeOf(Set, propMetadata.propertyType) || hasPrototypeOf(Map, propMetadata.propertyType)) {
+            if (hasPrototypeOf(propMetadata.propertyType, Set) || hasPrototypeOf(propMetadata.propertyType, Map)) {
                 const collection = hashObject[propMetadata.propertyName] as Map<any, any> | Set<any> | null | undefined;
                 if (collection === null) {
                     // Null value for collection

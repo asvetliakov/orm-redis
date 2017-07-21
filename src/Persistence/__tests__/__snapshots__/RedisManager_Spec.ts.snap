@@ -16,6 +16,11 @@ Array [
     "i:4",
   ],
   Array [
+    "hdel",
+    "e:A:1",
+    "prop1",
+  ],
+  Array [
     "hmset",
     "e:A:1",
     "prop3",
@@ -47,7 +52,6 @@ Array [
   Object {
     "id": "i:1",
     "map1": "m:e:A:1:map1",
-    "prop1": "s:abc",
     "prop3": "d:1447146610000",
     "prop4": "j:{\\"a\\":\\"abc\\",\\"d\\":8}",
     "prop5": "s:abcdef",
@@ -64,6 +68,44 @@ Array [
     "s:3",
     "i:2",
   ],
+]
+`;
+
+exports[`Save Saves only changed properties 3`] = `
+Array [
+  Array [
+    "multi",
+  ],
+  Array [
+    "del",
+    "e:A:1:set1",
+  ],
+  Array [
+    "del",
+    "e:A:1:map1",
+  ],
+  Array [
+    "hdel",
+    "e:A:1",
+    "set1",
+    "map1",
+  ],
+  Array [
+    "exec",
+  ],
+]
+`;
+
+exports[`Save Saves only changed properties 4`] = `
+Array [
+  Object {
+    "id": "i:1",
+    "prop3": "d:1447146610000",
+    "prop4": "j:{\\"a\\":\\"abc\\",\\"d\\":8}",
+    "prop5": "s:abcdef",
+  },
+  null,
+  Array [],
 ]
 `;
 
