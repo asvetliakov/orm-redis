@@ -1,6 +1,6 @@
 import { PropertyMetadata, REDIS_PROPERTIES } from "../Metadata/Metadata";
 
-type ValidType =
+export type ValidType =
     typeof Number |
     typeof String |
     typeof Boolean |

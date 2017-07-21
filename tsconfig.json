@@ -6,10 +6,11 @@
         "module": "commonjs",
         "target": "es2016",
         "strictNullChecks": true,
-        // "declaration": true,
+        "declaration": false,
         "noEmitOnError": true,
         "noUnusedLocals": true,
-        "sourceMap": true,
+        "sourceMap": false,
+        "inlineSourceMap": true,
         "types": [
             "reflect-metadata",
             "jest"

@@ -9,7 +9,7 @@ const defaultOptions: RelationOptions = {
     cascadeUpdate: false
 };
 
-type RelationTypeFunc = (type?: any) => Function | Function[];
+export type RelationTypeFunc = (type?: any) => Function | Function[];
 
 /**
  * Defines single or multiple relation property
