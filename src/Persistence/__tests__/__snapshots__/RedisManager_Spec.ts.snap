@@ -1,5 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Save Doesn't update single relation without cascade update 1`] = `Array []`;
+
+exports[`Save Doesn't update single relation without cascade update 2`] = `
+Object {
+  "id": "i:1",
+  "prop1": "s:abc",
+}
+`;
+
+exports[`Save Saves cyclic relation with cascade inserting 1`] = `
+Array [
+  Object {
+    "b": "e:B:1",
+    "id": "i:1",
+    "prop": "s:I'm a",
+  },
+  Object {
+    "a": "e:A:1",
+    "id": "i:1",
+    "prop": "s:I'm b",
+  },
+]
+`;
+
 exports[`Save Saves only changed properties 1`] = `
 Array [
   Array [
@@ -134,4 +158,51 @@ Array [
     "i:2",
   ],
 ]
+`;
+
+exports[`Save Saves single relation with cascade inserting 1`] = `
+Array [
+  Object {
+    "id": "i:1",
+    "rel": "e:Rel:1",
+  },
+  Object {
+    "id": "i:1",
+    "prop": "s:rel",
+  },
+]
+`;
+
+exports[`Save Saves single relation without cascade inserting 1`] = `
+Array [
+  Object {
+    "id": "i:1",
+    "rel": "e:Rel:1",
+  },
+  null,
+]
+`;
+
+exports[`Save Updates single relation with with cascade updating 1`] = `
+Array [
+  Array [
+    "multi",
+  ],
+  Array [
+    "hmset",
+    "e:A:1",
+    "prop1",
+    "s:cde",
+  ],
+  Array [
+    "exec",
+  ],
+]
+`;
+
+exports[`Save Updates single relation with with cascade updating 2`] = `
+Object {
+  "id": "i:1",
+  "prop1": "s:cde",
+}
 `;

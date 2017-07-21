@@ -12,6 +12,7 @@ it("Works for classes", () => {
     class E extends D { }
     expect(hasPrototypeOf(E, D)).toBeTruthy();
     expect(hasPrototypeOf(E, Map)).toBeTruthy();
+    expect(hasPrototypeOf(undefined, Map)).toBeFalsy();
 });
 
 it("Works for functions", () => {

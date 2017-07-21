@@ -124,7 +124,7 @@ export class RedisManager {
      * @returns 
      */
     private getEntitiesForSubscribers(entity: { [key: string]: any }, entities: object[] = []): object[] {
-        if (!isRedisHash(entity) || entities.includes(entities)) {
+        if (!isRedisHash(entity) || entities.includes(entity)) {
             return entities;
         }
         entities.push(entity);

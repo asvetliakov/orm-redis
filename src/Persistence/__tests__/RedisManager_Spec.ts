@@ -2,6 +2,7 @@ import { Connection } from "../../Connection/Connection";
 import { Hash } from "../../Decorators/Hash";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
+import { RelationProperty } from "../../Decorators/RelationProperty";
 import { cleanRedisConnection, createRedisConnection } from "../../testutils/redis";
 import { RedisTestMonitor } from "../../testutils/RedisTestMonitor";
 import { RedisManager } from "../RedisManager";
@@ -161,5 +162,164 @@ describe("Save", () => {
         await manager.save(a);
         await monitor.wait(100);
         expect(monitor.requests).toHaveLength(0);
+    });
+
+    it("Saves single relation without cascade inserting", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "rel";
+        }
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @RelationProperty(type => Rel)
+            public rel: Rel = new Rel();
+        }
+        const a = new A();
+        await manager.save(a);
+        const res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.hgetallAsync("e:Rel:1"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Saves single relation with cascade inserting", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "rel";
+        }
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @RelationProperty(type => Rel, { cascadeInsert: true })
+            public rel: Rel = new Rel();
+        }
+        const a = new A();
+        await manager.save(a);
+        const res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.hgetallAsync("e:Rel:1"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Saves cyclic relation with cascade inserting", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "I'm a";
+
+            public b: B;
+        }
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "I'm b";
+
+            public a: A;
+        }
+        const a = new A();
+        const b = new B();
+        RelationProperty(type => [B, B], { cascadeInsert: true })(a, "b");
+        RelationProperty(type => [A, A], { cascadeInsert: true })(b, "a");
+        a.b = b;
+        b.a = a;
+        await manager.save(a);
+        const res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.hgetallAsync("e:B:1"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Updates single relation with with cascade updating", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop1: string = "abc";
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "b string";
+
+            @RelationProperty(type => A, { cascadeInsert: true, cascadeUpdate: true })
+            public a: A = new A();
+        }
+
+        const b = new B();
+        await manager.save(b);
+
+        await monitor.clearMonitorCalls(100);
+        b.a.prop1 = "cde";
+        await manager.save(b);
+        await monitor.wait(100);
+        expect(monitor.requests).toMatchSnapshot();
+        const res = await conn.client.hgetallAsync("e:A:1");
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Doesn't update single relation without cascade update", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop1: string = "abc";
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "b string";
+
+            @RelationProperty(type => A, { cascadeInsert: true, cascadeUpdate: false })
+            public a: A = new A();
+        }
+
+        const b = new B();
+        await manager.save(b);
+
+        await monitor.clearMonitorCalls(100);
+        b.a.prop1 = "cde";
+        await manager.save(b);
+        await monitor.wait(100);
+        expect(monitor.requests).toMatchSnapshot();
+        const res = await conn.client.hgetallAsync("e:A:1");
+        expect(res).toMatchSnapshot();
+    });
+
+    it.skip("Doesn't touch relation if loaded entity without it", async () => {
+
     });
 });

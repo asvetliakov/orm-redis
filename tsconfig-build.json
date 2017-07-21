@@ -5,6 +5,7 @@
         "inlineSourceMap": false,
         "declaration": true,
         "sourceMap": true,
+        "noEmit": false,
         "types": [
             "reflect-metadata"
         ],

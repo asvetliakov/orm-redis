@@ -65,6 +65,6 @@
     "roots": [
       "<rootDir>/src"
     ],
-    "mapCoverage": true
+    "mapCoverage": false
   }
 }

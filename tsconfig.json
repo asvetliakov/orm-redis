@@ -8,6 +8,7 @@
         "strictNullChecks": true,
         "declaration": false,
         "noEmitOnError": true,
+        "noEmit": true,
         "noUnusedLocals": true,
         "sourceMap": false,
         "inlineSourceMap": true,
@@ -24,8 +25,7 @@
             "sb-promisify": [
                 "./types/sb-promisify"
             ]
-        },
-        "outDir": "./compiled"
+        }
     },
     "include": [
         "src/**/*"
