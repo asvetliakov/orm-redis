@@ -1,5 +1,5 @@
 import { Connection } from "../Connection/Connection";
-import { getRedisHashProperties, isRedisHash, PropertyMetadata } from "../Metadata/Metadata";
+import { getRedisHashProperties, isRedisHash } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
 import { Operator } from "./Operator";
 
@@ -61,7 +61,7 @@ export class RedisManager {
                 executor.del(deleteSet);
             }
             for (const deleteHash of operation.deleteHashes) {
-                executor.debug(deleteHash);
+                executor.del(deleteHash);
             }
             for (const modifySet of operation.modifySets) {
                 if (modifySet.removeValues.length > 0) {

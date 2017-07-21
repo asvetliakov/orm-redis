@@ -65,7 +65,7 @@ export async function createRedisConnection(options: ConnectionOptions = {}): Pr
     connectionToDbNumber.set(connection, dbNumber);
     try {
         await connection.connect({
-            db: dbNumber.toString(),
+            db: dbNumber,
             host: process.env.REDIS_HOST,
             port: parseInt(process.env.REDIS_PORT!) || 6379,
             ...options
@@ -95,4 +95,15 @@ export async function cleanRedisConnection(connection: Connection): Promise<void
     if (connection.isConnected) {
         await connection.disconnect();
     }
+}
+
+/**
+ * Return database number used for connection
+ * 
+ * @export
+ * @param connection 
+ * @returns 
+ */
+export function getDatabaseNumberForConnection(connection: Connection): string | undefined {
+    return connectionToDbNumber.get(connection);
 }

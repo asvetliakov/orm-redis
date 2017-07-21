@@ -1,5 +1,72 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Save Saves only changed properties 1`] = `
+Array [
+  Array [
+    "multi",
+  ],
+  Array [
+    "srem",
+    "e:A:1:set1",
+    "i:1",
+  ],
+  Array [
+    "sadd",
+    "e:A:1:set1",
+    "i:4",
+  ],
+  Array [
+    "hmset",
+    "e:A:1",
+    "prop3",
+    "d:1447146610000",
+    "prop4",
+    "j:{\\"a\\":\\"abc\\",\\"d\\":8}",
+    "prop5",
+    "s:abcdef",
+  ],
+  Array [
+    "hdel",
+    "e:A:1:map1",
+    "s:1",
+  ],
+  Array [
+    "hmset",
+    "e:A:1:map1",
+    "i:2",
+    "s:number2",
+  ],
+  Array [
+    "exec",
+  ],
+]
+`;
+
+exports[`Save Saves only changed properties 2`] = `
+Array [
+  Object {
+    "id": "i:1",
+    "map1": "m:e:A:1:map1",
+    "prop1": "s:abc",
+    "prop3": "d:1447146610000",
+    "prop4": "j:{\\"a\\":\\"abc\\",\\"d\\":8}",
+    "prop5": "s:abcdef",
+    "set1": "a:e:A:1:set1",
+  },
+  Object {
+    "i:1": "s:number1",
+    "i:2": "s:number2",
+    "i:3": "d:1478769010000",
+  },
+  Array [
+    "i:4",
+    "b:1",
+    "s:3",
+    "i:2",
+  ],
+]
+`;
+
 exports[`Save Saves simple entity 1`] = `
 Array [
   Object {
@@ -9,6 +76,7 @@ Array [
     "prop1": "s:abc",
     "prop3": "d:1478769010000",
     "prop4": "j:{\\"a\\":\\"abc\\",\\"d\\":5}",
+    "prop5": "null",
     "set1": "a:e:A:1:set1",
   },
   Object {
