@@ -1,7 +1,7 @@
 import { Connection } from "../Connection/Connection";
 import { getRedisHashProperties, isRedisHash } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
-import { Operator } from "./Operator";
+import { Operator, PersistenceOperation } from "./Operator";
 
 export class RedisManager {
     /**
@@ -55,31 +55,33 @@ export class RedisManager {
             }
             return prev;
         }, {});
-        // Do operation
-        await this.connection.transaction(executor => {
-            for (const deleteSet of operation.deletesSets) {
-                executor.del(deleteSet);
-            }
-            for (const deleteHash of operation.deleteHashes) {
-                executor.del(deleteHash);
-            }
-            for (const modifySet of operation.modifySets) {
-                if (modifySet.removeValues.length > 0) {
-                    executor.srem(modifySet.setName, modifySet.removeValues);
+        if (!this.isEmptyPersistenceOperation(operation)) {
+            // Do operation
+            await this.connection.transaction(executor => {
+                for (const deleteSet of operation.deletesSets) {
+                    executor.del(deleteSet);
                 }
-                if (modifySet.addValues.length > 0) {
-                    executor.sadd(modifySet.setName, modifySet.addValues);
+                for (const deleteHash of operation.deleteHashes) {
+                    executor.del(deleteHash);
                 }
-            }
-            for (const modifyHash of operation.modifyHashes) {
-                if (modifyHash.deleteKeys.length > 0) {
-                    executor.hdel(modifyHash.hashId, modifyHash.deleteKeys);
+                for (const modifySet of operation.modifySets) {
+                    if (modifySet.removeValues.length > 0) {
+                        executor.srem(modifySet.setName, modifySet.removeValues);
+                    }
+                    if (modifySet.addValues.length > 0) {
+                        executor.sadd(modifySet.setName, modifySet.addValues);
+                    }
                 }
-                if (Object.keys(modifyHash.changeKeys).length > 0) {
-                    executor.hmset(modifyHash.hashId, modifyHash.changeKeys);
+                for (const modifyHash of operation.modifyHashes) {
+                    if (modifyHash.deleteKeys.length > 0) {
+                        executor.hdel(modifyHash.hashId, modifyHash.deleteKeys);
+                    }
+                    if (Object.keys(modifyHash.changeKeys).length > 0) {
+                        executor.hmset(modifyHash.hashId, modifyHash.changeKeys);
+                    }
                 }
-            }
-        });
+            });
+        }
         // update metadata
         this.operator.updateMetadataInHash(entity);
         // Call entities subscribers
@@ -148,5 +150,18 @@ export class RedisManager {
             }
         }
         return entities;
+    }
+
+    /**
+     * True true if persistence operation is empty (i.e. doesn't have any changes)
+     * 
+     * @private
+     * @param operation 
+     * @returns 
+     */
+    private isEmptyPersistenceOperation(operation: PersistenceOperation): boolean {
+        return operation.deleteHashes.length === 0 && operation.deletesSets.length === 0 &&
+            (operation.modifyHashes.length === 0 || operation.modifyHashes.every(val => val.deleteKeys.length === 0 && Object.keys(val.changeKeys).length === 0)) &&
+            (operation.modifySets.length === 0 || operation.modifySets.every(val => val.addValues.length === 0 && val.removeValues.length === 0));
     }
 }

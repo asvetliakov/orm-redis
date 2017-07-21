@@ -126,4 +126,27 @@ describe("Save", () => {
         ]);
         expect(res).toMatchSnapshot();
     });
+
+    it("Doesn't send change requests if there are no any changes", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop: string = "abc";
+
+            @Property(Map)
+            public set: Map<any, any> = new Map<any, any>([
+                [1, "a"],
+                [2, "b"]
+            ]);
+        }
+        const a = new A();
+        await manager.save(a);
+        await monitor.clearMonitorCalls(100);
+        await manager.save(a);
+        await monitor.wait(100);
+        expect(monitor.requests).toHaveLength(0);
+    });
 });
