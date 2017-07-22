@@ -1149,6 +1149,32 @@ describe("Save/Delete/Update", () => {
                 operator.getSaveOperation(e);
             });
         });
+
+        it("Deletes relation sets but not relation itself", () => {
+            @Hash()
+            class Rel {
+                @IdentifyProperty()
+                @TestRedisInitialValue()
+                public id: number;
+
+            }
+            const rel1 = new Rel();
+            rel1.id = 1;
+            const rel2 = new Rel();
+            rel2.id = 2;
+            @Hash()
+            class A {
+                @IdentifyProperty()
+                @TestRedisInitialValue()
+                public id: number = 1;
+
+                @RelationProperty(type => [Rel, Set])
+                @TestRedisInitialCollectionValue()
+                public set1: Set<Rel> = new Set([rel1, rel2]);
+            }
+            const res = operator.getDeleteOperation(new A());
+            expect(res).toMatchSnapshot();
+        });
     });
 
     describe("Multiple relations in maps", () => {
@@ -1539,6 +1565,35 @@ describe("Save/Delete/Update", () => {
                 RelationProperty(type => [Rel, Map])(e, "rels");
                 operator.getSaveOperation(e);
             });
+        });
+
+        it("Deletes relation maps but not relation itself", () => {
+            @Hash()
+            class Rel {
+                @IdentifyProperty()
+                @TestRedisInitialValue()
+                public id: number;
+
+            }
+            const rel1 = new Rel();
+            rel1.id = 1;
+            const rel2 = new Rel();
+            rel2.id = 2;
+            @Hash()
+            class A {
+                @IdentifyProperty()
+                @TestRedisInitialValue()
+                public id: number = 1;
+
+                @RelationProperty(type => [Rel, Map])
+                @TestRedisInitialCollectionValue()
+                public set1: Map<number, Rel> = new Map([
+                    [1, rel1],
+                    [2, rel2]
+                ]);
+            }
+            const res = operator.getDeleteOperation(new A());
+            expect(res).toMatchSnapshot();
         });
     });
 });

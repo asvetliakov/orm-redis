@@ -436,16 +436,12 @@ export class Operator {
             const initialRedisValue: string | undefined | "null" = Reflect.getMetadata(REDIS_VALUE, entity, propMetadata.propertyName);
 
             if (hasPrototypeOf(valueType, Set)) {
-                if (!propMetadata.isRelation) {
-                    if (initialRedisValue && initialRedisValue !== "null") {
-                        operation.deletesSets.push(`${fullHashId}:${propMetadata.propertyRedisName}`);
-                    }
+                if (initialRedisValue && initialRedisValue !== "null") {
+                    operation.deletesSets.push(`${fullHashId}:${propMetadata.propertyRedisName}`);
                 }
             } else if (hasPrototypeOf(valueType, Map)) {
-                if (!propMetadata.isRelation) {
-                    if (initialRedisValue && initialRedisValue !== "null") {
-                        operation.deleteHashes.push(`${fullHashId}:${propMetadata.propertyRedisName}`);
-                    }
+                if (initialRedisValue && initialRedisValue !== "null") {
+                    operation.deleteHashes.push(`${fullHashId}:${propMetadata.propertyRedisName}`);
                 }
             }
             // else if (propMetadata.isRelation && propMetadata.relationOptions.cascadeDelete && value) {

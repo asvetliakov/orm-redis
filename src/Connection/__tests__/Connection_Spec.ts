@@ -75,6 +75,7 @@ describe("Monitoring", () => {
         await new Promise(resolve => setTimeout(resolve, 300));
         
         await conn.flushdb();
+        await new Promise(resolve => setTimeout(resolve, 300));
         expect(loggerSpy).toBeCalledWith(expect.any(String), ["flushdb"], expect.any(String));
     });
     

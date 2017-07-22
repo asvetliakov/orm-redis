@@ -12,5 +12,5 @@ export interface EntitySubscriberInterface<T> {
     
     beforeRemove?(entity: T): Promise<void>;
     
-    afterRemove?(): Promise<void>;
+    afterRemove?(entity: T): Promise<void>;
 }

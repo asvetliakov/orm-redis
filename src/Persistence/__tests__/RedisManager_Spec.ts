@@ -600,6 +600,105 @@ describe("Save", () => {
     });
 });
 
+describe("Remove", () => {
+    it("Removes entity", async () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property()
+            public prop1: string = "abc";
+
+            @Property(Set)
+            public set: Set<any> = new Set([1, 2, 3]);
+
+            @Property(Map)
+            public map: Map<number, any> = new Map([
+                [1, "uno"],
+                [2, "dos"]
+            ]);
+        }
+
+        const a = new A();
+        await manager.save(a);
+
+        let res: any = await conn.client.hgetallAsync("e:A:1");
+        expect(res.id).toBe("i:1");
+        await manager.remove(a);
+        res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.hgetallAsync("e:A:1:map"),
+            conn.client.smembersAsync("e:A:1:set"),
+        ]);
+        expect(res).toMatchSnapshot();
+
+        // can be saved again after removing
+        await manager.save(a);
+        res = await Promise.all([
+            conn.client.hgetallAsync("e:A:1"),
+            conn.client.hgetallAsync("e:A:1:map"),
+            conn.client.smembersAsync("e:A:1:set"),
+        ]);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Doesn't remove relations", async () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @RelationProperty(type => Rel, { cascadeInsert: true })
+            public singleRel: Rel;
+
+            @RelationProperty(type => [Rel, Set], { cascadeInsert: true })
+            public setRel: Set<Rel> = new Set();
+
+            @RelationProperty(type => [Rel, Map], { cascadeInsert: true })
+            public mapRel: Map<number, Rel> = new Map();
+        }
+
+        const a = new A();
+        const rel1 = new Rel();
+        rel1.id = 1;
+        const rel2 = new Rel();
+        rel2.id = 2;
+        a.singleRel = rel1;
+        a.setRel.add(rel1);
+        a.mapRel.set(1, rel1).set(2, rel2);
+
+        await manager.save(a);
+        let res: any = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("e:A:1:setRel"),
+            conn.client.existsAsync("e:A:1:mapRel"),
+            conn.client.existsAsync("e:Rel:1"),
+            conn.client.existsAsync("e:Rel:2"),
+        ]);
+        expect(res).toEqual([1, 1, 1, 1, 1]);
+        await manager.remove(a);
+        res = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("e:A:1:setRel"),
+            conn.client.existsAsync("e:A:1:mapRel"),
+            conn.client.existsAsync("e:Rel:1"),
+            conn.client.existsAsync("e:Rel:2"),
+        ]);
+        expect(res).toEqual([0, 0, 0, 1, 1]);
+    });
+
+    it.skip("Deletes relation sets/maps even if relations weren't loaded", () => {
+        
+    });
+});
+
 describe("Runs entity subscribers", () => {
     it("On save/update", async () => {
         @Hash()
@@ -709,11 +808,69 @@ describe("Runs entity subscribers", () => {
         expect(sub1.afterSave).not.toBeCalled();
     });
 
-    it("On delete", () => {
+    describe("On delete", () => {
+        it("Calls beforeRemove/afterRemove methods for entity", async () => {
+            @Hash()
+            class A {
+                @IdentifyProperty()
+                public id: number = 1;
+            }
 
+            const sub: EntitySubscriberInterface<A> = {
+                listenTo: () => A,
+                beforeRemove: jest.fn(),
+                afterRemove: jest.fn()
+            };
+            const manager = new RedisManager(conn, [sub]);
+            const a = new A();
+            await manager.save(a);
+            await manager.remove(a);
+            expect(sub.beforeRemove).toBeCalledWith(a);
+            expect(sub.afterRemove).toBeCalledWith(a);
+        });
+
+        it("Doesn't call for any relations", async () => {
+            @Hash()
+            class Rel {
+                @IdentifyProperty()
+                public id: number;
+            }
+            const rel1 = new Rel();
+            const rel2 = new Rel();
+            const rel3 = new Rel();
+            rel1.id = 1;
+            rel2.id = 2;
+            rel3.id = 3;
+
+            @Hash()
+            class A {
+                @IdentifyProperty()
+                public id: number = 1;
+
+                @RelationProperty(type => Rel, { cascadeInsert: true })
+                public rel: Rel = rel1;
+
+                @RelationProperty(type => [Rel, Set])
+                public relSet: Set<Rel> = new Set([rel2]);
+
+                @RelationProperty(type => [Rel, Map])
+                public relMap: Map<number, Rel> = new Map([[1, rel3]]);
+            }
+            const sub: EntitySubscriberInterface<A> = {
+                listenTo: () => Rel,
+                beforeRemove: jest.fn(),
+                afterRemove: jest.fn()
+            };
+            const manager = new RedisManager(conn, [sub]);
+            const a = new A();
+            await manager.save(a);
+            await manager.remove(a);
+            expect(sub.beforeRemove).not.toBeCalled();
+            expect(sub.afterRemove).not.toBeCalled();
+        });
     });
 
-    it("On load", () => {
+    describe("On load", () => {
 
     });
 });

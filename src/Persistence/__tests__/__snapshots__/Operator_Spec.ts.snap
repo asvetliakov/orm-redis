@@ -103,6 +103,18 @@ Object {
 }
 `;
 
+exports[`Save/Delete/Update Multiple relations in maps Deletes relation maps but not relation itself 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+    "e:A:1:set1",
+  ],
+  "deletesSets": Array [],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
 exports[`Save/Delete/Update Multiple relations in maps Save cyclic relations with cascade insert 1`] = `
 Object {
   "deleteHashes": Array [],
@@ -349,6 +361,19 @@ Object {
       "hashId": "e:E:1:rels",
     },
   ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Multiple relations in sets Deletes relation sets but not relation itself 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+  ],
+  "deletesSets": Array [
+    "e:A:1:set1",
+  ],
+  "modifyHashes": Array [],
   "modifySets": Array [],
 }
 `;

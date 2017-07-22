@@ -1,5 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Remove Removes entity 1`] = `
+Array [
+  null,
+  null,
+  Array [],
+]
+`;
+
+exports[`Remove Removes entity 2`] = `
+Array [
+  Object {
+    "id": "i:1",
+    "map": "m:e:A:1:map",
+    "prop1": "s:abc",
+    "set": "a:e:A:1:set",
+  },
+  Object {
+    "i:1": "s:uno",
+    "i:2": "s:dos",
+  },
+  Array [
+    "i:3",
+    "i:1",
+    "i:2",
+  ],
+]
+`;
+
 exports[`Save Doesn't update relations in maps/sets without cascade update 1`] = `
 Object {
   "id": "i:1",

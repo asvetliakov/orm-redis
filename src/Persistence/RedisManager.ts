@@ -3,6 +3,12 @@ import { getRedisHashFullId, getRedisHashProperties, isRedisHash } from "../Meta
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
 import { Operator, PersistenceOperation } from "./Operator";
 
+/**
+ * Main manager to get/save/remove entities
+ * 
+ * @export
+ * @class RedisManager
+ */
 export class RedisManager {
     /**
      * Array of entity subscribers
@@ -112,8 +118,35 @@ export class RedisManager {
         return Promise.resolve(undefined);
     }
 
+    /**
+     * Remove entity. Doesn't remove linked relations
+     * 
+     * @template T 
+     * @param entity 
+     * @returns 
+     */
     public async remove<T>(entity: T): Promise<void> { 
-
+        const operation = this.operator.getDeleteOperation(entity);
+        if (this.isEmptyPersistenceOperation(operation)) {
+            return;
+        }
+        // Since we don't support cascade delete no need to process relations for subscribers
+        const subscriber = this.subscribers.find(sub => sub.listenTo() === entity.constructor);
+        if (subscriber && subscriber.beforeRemove) {
+            subscriber.beforeRemove(entity);
+        }
+        await this.connection.transaction(executor => {
+            for (const deleteSet of operation.deletesSets) {
+                executor.del(deleteSet);
+            }
+            for (const deleteHash of operation.deleteHashes) {
+                executor.del(deleteHash);
+            }
+        });
+        this.operator.resetMetadataInHash(entity);
+        if (subscriber && subscriber.afterRemove) {
+            subscriber.afterRemove(entity);
+        }
     }
 
 
