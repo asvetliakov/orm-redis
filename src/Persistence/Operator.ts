@@ -74,21 +74,17 @@ export interface PersistenceOperation {
 
 export interface LoadOperation {
     /**
-     * Array of hashes to load
+     * Full entity id
      */
-    loadHashes: string[];
+    entityFullId: string;
     /**
-     * Array of relation hashes to load
+     * Entity sets to load
      */
-    loadRelationHashes: string[];
+    sets: string[];
     /**
-     * Array of sets to load
+     * Entity hashes to load
      */
-    loadSets: string[];
-    /**
-     * Array of relation sets to load
-     */
-    loadRelationSets: string[];
+    hashes: string[];
 }
 
 export interface EntityWithId {
@@ -465,26 +461,17 @@ export class Operator {
         const fullHashId = this.getFullIdForHashClass(hashClass, id);
 
         const operation: LoadOperation = {
-            loadHashes: [],
-            loadSets: [],
-            loadRelationHashes: [],
-            loadRelationSets: []
+            entityFullId: fullHashId,
+            hashes: [],
+            sets: []
         };
 
-        operation.loadHashes.push(fullHashId);
         const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, hashClass);
         for (const propMetadata of metadata) {
             const propType = propMetadata.propertyType;
-            if (hasPrototypeOf(propType, Set)) {
-                const name = `${fullHashId}:${propMetadata.propertyRedisName}`;
-                propMetadata.isRelation
-                    ? operation.loadRelationSets.push(name)
-                    : operation.loadSets.push(name);
-            } else if (hasPrototypeOf(propType, Map)) {
-                const name = `${fullHashId}:${propMetadata.propertyRedisName}`;
-                propMetadata.isRelation
-                    ? operation.loadRelationHashes.push(name)
-                    : operation.loadHashes.push(name);
+            if (hasPrototypeOf(propType, Set) || hasPrototypeOf(propType, Map)) {
+                const collId = `${fullHashId}:${propMetadata.propertyRedisName}`;
+                hasPrototypeOf(propType, Set) ? operation.sets.push(collId) : operation.hashes.push(collId);
             }
         }
         return operation;

@@ -2,13 +2,11 @@
 
 exports[`Load Return load operation for hash with non relation sets or maps 1`] = `
 Object {
-  "loadHashes": Array [
-    "e:E:1",
+  "entityFullId": "e:E:1",
+  "hashes": Array [
     "e:E:1:map",
   ],
-  "loadRelationHashes": Array [],
-  "loadRelationSets": Array [],
-  "loadSets": Array [
+  "sets": Array [
     "e:E:1:set",
   ],
 }
@@ -16,32 +14,25 @@ Object {
 
 exports[`Load Return load operation for hash with relation sets or maps 1`] = `
 Object {
-  "loadHashes": Array [
-    "e:E:1",
-  ],
-  "loadRelationHashes": Array [
+  "entityFullId": "e:E:1",
+  "hashes": Array [
     "e:E:1:map",
   ],
-  "loadRelationSets": Array [
+  "sets": Array [
     "e:E:1:set",
   ],
-  "loadSets": Array [],
 }
 `;
 
 exports[`Load Return load operation for map/sets with specified redis name 1`] = `
 Object {
-  "loadHashes": Array [
-    "e:E:1",
+  "entityFullId": "e:E:1",
+  "hashes": Array [
+    "e:E:1:myMap",
     "e:E:1:myMap2",
   ],
-  "loadRelationHashes": Array [
-    "e:E:1:myMap",
-  ],
-  "loadRelationSets": Array [
+  "sets": Array [
     "e:E:1:mySet",
-  ],
-  "loadSets": Array [
     "e:E:1:mySet2",
   ],
 }
@@ -49,12 +40,9 @@ Object {
 
 exports[`Load Return load operation for simple hash 1`] = `
 Object {
-  "loadHashes": Array [
-    "e:E:1",
-  ],
-  "loadRelationHashes": Array [],
-  "loadRelationSets": Array [],
-  "loadSets": Array [],
+  "entityFullId": "e:E:1",
+  "hashes": Array [],
+  "sets": Array [],
 }
 `;
 
