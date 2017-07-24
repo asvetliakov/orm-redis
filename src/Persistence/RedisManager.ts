@@ -253,6 +253,28 @@ export class RedisManager {
     }
 
     /**
+     * Remove entity be it's id. This WON'T trigger entity subscribers beforeRemove/afterRemove
+     * 
+     * @param entityClass 
+     * @param id 
+     * @returns 
+     */
+    public async removeById(entityClass: EntityType<any>, id: string | number): Promise<void> {
+        const operation = this.operator.getDeleteOperation(entityClass, id);
+        if (this.isEmptyPersistenceOperation(operation)) {
+            return;
+        }
+        await this.connection.transaction(executor => {
+            for (const deleteSet of operation.deletesSets) {
+                executor.del(deleteSet);
+            }
+            for (const deleteHash of operation.deleteHashes) {
+                executor.del(deleteHash);
+            }
+        });
+    }
+
+    /**
      * Serialize simple value to store it in redis
      * 
      * @param value 

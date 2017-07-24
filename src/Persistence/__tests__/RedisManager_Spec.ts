@@ -810,6 +810,37 @@ describe("Remove", () => {
         ]);
         expect(res).toEqual([0, 0, 0]);
     });
+
+    it("Deletes entity by given class and id", async () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property(Map)
+            public map: Map<any, any> = new Map([[1, "test"]]);
+
+            @Property(Set)
+            public set: Set<any> = new Set([1, 2]);
+        }
+
+        const a = new A();
+        await manager.save(a);
+
+        let res = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("m:e:A:1:map"),
+            conn.client.existsAsync("a:e:A:1:set"),
+        ]);
+        expect(res).toEqual([1, 1, 1]);
+        await manager.removeById(A, 1);
+        res = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("m:e:A:1:map"),
+            conn.client.existsAsync("a:e:A:1:set"),
+        ]);
+        expect(res).toEqual([0, 0, 0]);
+    });
 });
 
 describe("Load", () => {
