@@ -159,6 +159,14 @@ describe("Has", () => {
     });
 });
 
+describe("Size", () => {
+    it("Returns set size", async () => {
+        await conn.client.saddAsync("a:mySet", "i:1", "i:2", "i:3");
+        const set = new RedisLazySet("a:mySet", manager);
+        expect(await set.size()).toBe(3);
+    });
+});
+
 describe("Values", () => {
     it("Iterates over simple set values", async () => {
         const prefill: number[] = [];

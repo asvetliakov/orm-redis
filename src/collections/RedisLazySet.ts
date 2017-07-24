@@ -101,6 +101,15 @@ export class RedisLazySet<T> extends LazySet<T> {
     }
 
     /**
+     * Get size of set
+     * 
+     * @returns 
+     */
+    public async size(): Promise<number> {
+        return await this.manager.connection.client.scardAsync(this.setId);
+    }
+
+    /**
      * Iterate over values
      */
     public async * values(): AsyncIterableIterator<T> {
