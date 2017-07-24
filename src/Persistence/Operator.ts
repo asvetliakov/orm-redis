@@ -203,7 +203,7 @@ export class Operator {
                             operation.deleteHashes.push(collectionId);
                         }
                         value === null
-                            ? hashPropOperation.changeKeys[propMetadata.propertyRedisName] = this.prepareSimpleValue(null)!
+                            ? hashPropOperation.changeKeys[propMetadata.propertyRedisName] = this.serializeValue(null)!
                             : hashPropOperation.deleteKeys.push(propMetadata.propertyRedisName);
 
                     } else if (initialPropertyRedisValue === "null") {
@@ -216,7 +216,7 @@ export class Operator {
                         // 5, 6
                         if (value === null) {
                             // 6
-                            hashPropOperation.changeKeys[propMetadata.propertyRedisName] = this.prepareSimpleValue(null)!;
+                            hashPropOperation.changeKeys[propMetadata.propertyRedisName] = this.serializeValue(null)!;
                         }
                     }
                     // 
@@ -239,7 +239,7 @@ export class Operator {
                                 const relationId = this.prepareRelationValue(val, propMetadata)!;
                                 preparedValueMap.set(relationId, val);
                             } else {
-                                const preparedVal = this.prepareSimpleValue(val);
+                                const preparedVal = this.serializeValue(val);
                                 if (preparedVal) {
                                     preparedValueMap.set(preparedVal, preparedVal);
                                 }
@@ -270,7 +270,7 @@ export class Operator {
                         if (redisInitialCollectionValue && !Array.isArray(redisInitialCollectionValue)) {
                             // Calculate added/changed values over original collection. cascadeUpdate for relations will always mark collection as changed
                             for (const key of value.keys()) {
-                                const preparedKey = this.prepareSimpleValue(key);
+                                const preparedKey = this.serializeValue(key);
                                 if (!preparedKey) {
                                     continue;
                                 }
@@ -280,7 +280,7 @@ export class Operator {
                                 } else {
                                     const preparedValue = propMetadata.isRelation
                                         ? this.prepareRelationValue(value.get(key), propMetadata)
-                                        : this.prepareSimpleValue(value.get(key));
+                                        : this.serializeValue(value.get(key));
                                     if ((redisInitialCollectionValue[preparedKey] !== preparedValue || // change value
                                         (propMetadata.isRelation && propMetadata.relationOptions.cascadeUpdate)) // cascade update will always force
                                     ) {
@@ -298,7 +298,7 @@ export class Operator {
                         } else {
                             // new map
                             for (const key of value.keys()) {
-                                const preparedKey = this.prepareSimpleValue(key);
+                                const preparedKey = this.serializeValue(key);
                                 if (typeof preparedKey === "undefined") {
                                     continue;
                                 }
@@ -324,7 +324,7 @@ export class Operator {
                             changeKeys: [...added.keys(), ...changed.keys()].reduce((obj: { [key: string]: string }, key) => {
                                 const val = propMetadata.isRelation
                                     ? this.getFullIdForEntityObject(added.has(key) ? added.get(key) : changed.get(key))
-                                    : this.prepareSimpleValue(added.has(key) ? added.get(key) : changed.get(key));
+                                    : this.serializeValue(added.has(key) ? added.get(key) : changed.get(key));
                                 if (val) {
                                     obj[key] = val;
                                 }
@@ -351,7 +351,7 @@ export class Operator {
                 // Ordinary hash value or single relation
                 const preparedValue = propMetadata.isRelation
                     ? this.prepareRelationValue(value, propMetadata)
-                    : this.prepareSimpleValue(value);
+                    : this.serializeValue(value);
                 if (typeof preparedValue === "undefined" && initialPropertyRedisValue) {
                     // deletion
                     // delete hash key
@@ -574,7 +574,7 @@ export class Operator {
                 const collection = hashObject[propMetadata.propertyName] as Map<any, any> | Set<any> | null | undefined;
                 if (collection === null) {
                     // Null value for collection
-                    Reflect.defineMetadata(REDIS_VALUE, this.prepareSimpleValue(null)!, hashObject, propMetadata.propertyName);
+                    Reflect.defineMetadata(REDIS_VALUE, this.serializeValue(null)!, hashObject, propMetadata.propertyName);
                 } else if ((collection instanceof Set || collection instanceof Map) && collection.size > 0) {
                     // Collection have both REDIS_VALUE and REDIS_COLLECTION_VALUE
                     const collectionValueForProp = this.prepareCollectionValue(fullHashId, propMetadata);
@@ -583,17 +583,17 @@ export class Operator {
                         const setValues = [...collection.values()].map(
                             val => propMetadata.isRelation
                                 ? this.prepareRelationValue(val, propMetadata)
-                                : this.prepareSimpleValue(val)
+                                : this.serializeValue(val)
                         ).filter(val => typeof val !== "undefined");
                         Reflect.defineMetadata(REDIS_COLLECTION_VALUE, setValues, hashObject, propMetadata.propertyName);
                     } else {
                         Reflect.defineMetadata(REDIS_VALUE, collectionValueForProp, hashObject, propMetadata.propertyName);
                         const mapValues: { [key: string]: string } = {};
                         for (const [key, val] of collection) {
-                            const preparedKey = this.prepareSimpleValue(key);
+                            const preparedKey = this.serializeValue(key);
                             const preparedVal = propMetadata.isRelation
                                 ? this.prepareRelationValue(val, propMetadata)
-                                : this.prepareSimpleValue(val);
+                                : this.serializeValue(val);
                             if (typeof preparedKey !== "undefined" && typeof preparedVal !== "undefined") {
                                 mapValues[preparedKey] = preparedVal;
                             }
@@ -615,7 +615,7 @@ export class Operator {
                 const value = hashObject[propMetadata.propertyName];
                 const preparedValue = propMetadata.isRelation
                     ? this.prepareRelationValue(hashObject[propMetadata.propertyName], propMetadata)
-                    : this.prepareSimpleValue(hashObject[propMetadata.propertyName]);
+                    : this.serializeValue(hashObject[propMetadata.propertyName]);
                 if (typeof preparedValue !== "undefined") {
                     Reflect.defineMetadata(REDIS_VALUE, preparedValue, hashObject, propMetadata.propertyName);
                     // set metadata for relation
@@ -756,6 +756,62 @@ export class Operator {
     }
 
     /**
+     * Serialize value for persiting
+     * 
+     * @private
+     * @param value 
+     * @returns 
+     */
+    public serializeValue(value: any): string | undefined {
+        if (typeof value === "number") {
+            return `i:${value.toString()}`;
+        } else if (typeof value === "string") {
+            return `s:${value}`;
+        } else if (typeof value === "boolean") {
+            return value ? `b:1` : `b:0`;
+        } else if (typeof value === "symbol" || typeof value === "function" || typeof value === "undefined") {
+            return undefined;
+        } else if (typeof value === "object") {
+            if (value instanceof Date) {
+                return `d:${value.getTime().toString()}`;
+            } else if (value === null) {
+                return "null";
+            } else {
+                return `j:${JSON.stringify(value)}`;
+            }
+        } else {
+            return `j${JSON.stringify(value)}`;
+        }
+    }
+
+    /**
+     * Unserialize value
+     * 
+     * @private
+     * @param value 
+     * @returns 
+     */
+    public unserializeValue(value: string): string | number | boolean | null | object | Date | undefined {
+        if (value === "null") {
+            return null;
+        }
+        const type = value.slice(0, 2);
+        const valWithoutType = value.slice(2);
+        switch (type) {
+            case "i:": return parseFloat(valWithoutType);
+            case "s:": return valWithoutType;
+            case "b:": return valWithoutType === "1" ? true : false;
+            case "d:": return new Date(parseInt(valWithoutType));
+            case "j:": return JSON.parse(valWithoutType);
+            // return unserialized value for entities, sets and maps
+            case "e:": return value;
+            case "a:": return value;
+            case "m:": return value;    
+        }
+        return undefined;
+    }
+
+    /**
      * Check metadata correctness
      * 
      * @private
@@ -839,61 +895,6 @@ export class Operator {
         } else {
             return undefined;
         }
-    }
-    /**
-     * Serialize value for persiting
-     * 
-     * @private
-     * @param value 
-     * @returns 
-     */
-    private prepareSimpleValue(value: any): string | undefined {
-        if (typeof value === "number") {
-            return `i:${value.toString()}`;
-        } else if (typeof value === "string") {
-            return `s:${value}`;
-        } else if (typeof value === "boolean") {
-            return value ? `b:1` : `b:0`;
-        } else if (typeof value === "symbol" || typeof value === "function" || typeof value === "undefined") {
-            return undefined;
-        } else if (typeof value === "object") {
-            if (value instanceof Date) {
-                return `d:${value.getTime().toString()}`;
-            } else if (value === null) {
-                return "null";
-            } else {
-                return `j:${JSON.stringify(value)}`;
-            }
-        } else {
-            return `j${JSON.stringify(value)}`;
-        }
-    }
-
-    /**
-     * Unserialize value
-     * 
-     * @private
-     * @param value 
-     * @returns 
-     */
-    private unserializeValue(value: string): string | number | boolean | null | object | Date | undefined {
-        if (value === "null") {
-            return null;
-        }
-        const type = value.slice(0, 2);
-        const valWithoutType = value.slice(2);
-        switch (type) {
-            case "i:": return parseFloat(valWithoutType);
-            case "s:": return valWithoutType;
-            case "b:": return valWithoutType === "1" ? true : false;
-            case "d:": return new Date(parseInt(valWithoutType));
-            case "j:": return JSON.parse(valWithoutType);
-            // return unserialized value for entities, sets and maps
-            case "e:": return value;
-            case "a:": return value;
-            case "m:": return value;    
-        }
-        return undefined;
     }
 
     /**

@@ -13,18 +13,18 @@ export type EntityType<T> = { new(): T } | Function;
  */
 export class RedisManager {
     /**
+     * Connection instance
+     * 
+     * @protected
+     */
+    public connection: Connection;
+
+    /**
      * Array of entity subscribers
      * 
      * @protected
      */
     protected subscribers: Array<EntitySubscriberInterface<any>> = [];
-    
-    /**
-     * Connection instance
-     * 
-     * @protected
-     */
-    protected connection: Connection;
 
     /**
      * Entity operator
@@ -250,6 +250,26 @@ export class RedisManager {
         if (subscriber && subscriber.afterRemove) {
             subscriber.afterRemove(entity);
         }
+    }
+
+    /**
+     * Serialize simple value to store it in redis
+     * 
+     * @param value 
+     * @returns 
+     */
+    public serializeSimpleValue(value: any): string | undefined {
+        return this.operator.serializeValue(value);
+    }
+
+    /**
+     * Unserialize value
+     * 
+     * @param value 
+     * @returns 
+     */
+    public unserializeSimpleValue(value: string): any {
+        return this.operator.unserializeValue(value);
     }
 
 
