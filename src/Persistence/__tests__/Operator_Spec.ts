@@ -207,6 +207,9 @@ describe("Save/Delete/Update", () => {
         const a = new A();
         const res = operator.getSaveOperation(a);
         expect(res).toMatchSnapshot();
+
+        const deleteRes = operator.getDeleteOperation(a);
+        expect(deleteRes).toMatchSnapshot();
     });
 
     it("Simple values and updating/deleting over existing redis value", () => {
@@ -1595,6 +1598,26 @@ describe("Save/Delete/Update", () => {
             const res = operator.getDeleteOperation(new A());
             expect(res).toMatchSnapshot();
         });
+    });
+
+    it("Return delete operation for entity class with id", () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property(Map)
+            public map: Map<any, any>;
+
+            @Property(Set)
+            public set: Set<any>;
+        }
+
+        let res = operator.getDeleteOperation(A, 1);
+        expect(res).toMatchSnapshot();
+
+        res = operator.getDeleteOperation(A, "e:A:1");
+        expect(res).toMatchSnapshot();
     });
 });
 

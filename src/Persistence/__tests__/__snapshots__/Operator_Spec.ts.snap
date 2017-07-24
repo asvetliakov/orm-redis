@@ -771,6 +771,28 @@ Object {
 }
 `;
 
+exports[`Save/Delete/Update Process Map and Sets in properties 2`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+    "m:e:A:1:map1",
+    "m:e:A:1:map2",
+    "m:e:A:1:map3",
+    "m:e:A:1:map4",
+  ],
+  "deletesSets": Array [
+    "a:e:A:1:set1",
+    "a:e:A:1:anotherSet",
+    "a:e:A:1:set3",
+    "a:e:A:1:set4",
+    "a:e:A:1:set5",
+    "a:e:A:1:set6",
+  ],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
 exports[`Save/Delete/Update Process simple properties 1`] = `
 Object {
   "deleteHashes": Array [],
@@ -803,6 +825,34 @@ Object {
     "e:A:1",
   ],
   "deletesSets": Array [],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Return delete operation for entity class with id 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+    "m:e:A:1:map",
+  ],
+  "deletesSets": Array [
+    "a:e:A:1:set",
+  ],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Return delete operation for entity class with id 2`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+    "m:e:A:1:map",
+  ],
+  "deletesSets": Array [
+    "a:e:A:1:set",
+  ],
   "modifyHashes": Array [],
   "modifySets": Array [],
 }
@@ -886,12 +936,16 @@ Object {
     "m:e:A:1:mapChanged",
     "m:e:A:1:mapToNull",
     "m:e:A:1:mapToUndefined",
+    "m:e:A:1:createdNewMap",
+    "m:e:A:1:createdNewEmptyMap",
     "m:e:A:1:mapEmptied",
   ],
   "deletesSets": Array [
     "a:e:A:1:setModified",
     "a:e:A:1:setToNull",
     "a:e:A:1:setToUndefined",
+    "a:e:A:1:createdNewSet",
+    "a:e:A:1:createdNewEmptySet",
     "a:e:A:1:setEmptied",
   ],
   "modifyHashes": Array [],

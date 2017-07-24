@@ -426,53 +426,65 @@ export class Operator {
     /**
      * Get delete operation for given loaded hash
      * 
-     * @param entity 
-     * @param [processedEntities=[]] 
+     * @param entityOrEntityClass 
+     * @param [entityId]
      * @returns 
      */
-    public getDeleteOperation(entity: { [key: string]: any }, processedEntities: EntityWithId[] = []): PersistenceOperation {
+    public getDeleteOperation(entityOrEntityClass: { [key: string]: any } | Function, entityId?: string | number): PersistenceOperation {
         const operation: PersistenceOperation = {
             deleteHashes: [],
             deletesSets: [],
             modifyHashes: [],
             modifySets: []
         };
-        if (!entity) {
+        if (!entityOrEntityClass) {
             return operation;
         }
-        this.checkMetadata(entity);
-        const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, entity.constructor);
-        const fullHashId = this.getFullIdForEntityObject(entity);
+        this.checkMetadata(entityOrEntityClass);
+        const metadatas = getEntityProperties(entityOrEntityClass);
+        if (!metadatas) {
+            throw new MetadataError(typeof entityOrEntityClass === "function" ? entityOrEntityClass : entityOrEntityClass.constructor, "Not an entity");
+        }
+        // const fullHashId = this.getFullIdForEntityObject(entityOrEntityClass);
+        const fullHashId = typeof entityId === "string" && entityId.startsWith("e:")
+            ? entityId
+            : getEntityFullId(entityOrEntityClass, entityId);   
+        if (!fullHashId) {
+            throw new MetadataError(typeof entityOrEntityClass === "function" ? entityOrEntityClass : entityOrEntityClass.constructor, "Unable to get id from entity");
+        }
+
 
         // Circular objects checking
+        // not needed since we won't cascade
         // Must check for circular references and prevent delete/insert/update
         // Must check relation id and object equality to prevent different objects to be saved with same id
-        const processedThisEntity = processedEntities.find(ent => ent.entityId === fullHashId);
-        if (processedThisEntity) {
-            if (processedThisEntity.entity !== entity) {
-                // we have proceed entity with same id but objects are differs. This is error 
-                throw new DuplicateIdsInEntityError(entity, fullHashId);
-            } else {
-                // Return empty operation since we already proceed it
-                return operation;
-            }
-        }
-        processedEntities.push({ entity: entity, entityId: fullHashId });
+        // const processedThisEntity = processedEntities.find(ent => ent.entityId === fullHashId);
+        // if (processedThisEntity) {
+        //     if (processedThisEntity.entity !== entity) {
+        //         // we have proceed entity with same id but objects are differs. This is error 
+        //         throw new DuplicateIdsInEntityError(entity, fullHashId);
+        //     } else {
+        //         // Return empty operation since we already proceed it
+        //         return operation;
+        //     }
+        // }
+        // processedEntities.push({ entity: entity, entityId: fullHashId });
 
         operation.deleteHashes.push(fullHashId);
 
         for (const propMetadata of metadatas) {
             const valueType = propMetadata.propertyType;
-            const initialRedisValue: string | undefined | "null" = Reflect.getMetadata(REDIS_VALUE, entity, propMetadata.propertyName);
+            // const initialRedisValue: string | undefined | "null" = Reflect.getMetadata(REDIS_VALUE, entityOrEntityClass, propMetadata.propertyName);
 
+            // always try to delete maps/sets, there won't be error if there are not exist
             if (hasPrototypeOf(valueType, Set)) {
-                if (initialRedisValue && initialRedisValue !== "null") {
+                // if (initialRedisValue && initialRedisValue !== "null") {
                     operation.deletesSets.push(this.prepareCollectionValue(fullHashId, propMetadata)!);
-                }
+                // }
             } else if (hasPrototypeOf(valueType, Map)) {
-                if (initialRedisValue && initialRedisValue !== "null") {
+                // if (initialRedisValue && initialRedisValue !== "null") {
                     operation.deleteHashes.push(this.prepareCollectionValue(fullHashId, propMetadata)!);
-                }
+                // }
             }
             // else if (propMetadata.isRelation && propMetadata.relationOptions.cascadeDelete && value) {
             //     const relationOperation = this.getDeleteOperation(value, processedEntities);
