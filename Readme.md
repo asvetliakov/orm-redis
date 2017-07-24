@@ -18,7 +18,20 @@
 * TypeScript 2.3 or greater
 * Node 7.*
 
-## Example
+## Setup
+
+Enable ```emitDecoratorMetadata``` and ```experimentalDecorators``` in your tsconfig.json
+
+Install ```reflect-metadata``` library and import it somewhere in your project:
+
+```
+npm install reflect-metadata --save
+
+// in index.ts
+import "reflect-metadata";
+```
+
+## Examples
 
 ### Basic example
 
