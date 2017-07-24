@@ -112,6 +112,7 @@ describe("PubSub", () => {
         await anotherConn.subscribe("some channel", "some other channel");
         await conn.client.publishAsync("some channel", "some message");
         await conn.client.publishAsync("some other channel", "some message");
+        await new Promise(resolve => setTimeout(resolve, 200));
         expect(messages[0]).toEqual(["some channel", "some message"]);
         expect(messages[1]).toEqual(["some other channel", "some message"]);
     });
@@ -130,6 +131,7 @@ describe("PubSub", () => {
         await anotherConn.psubscribe("channel?");
         await conn.client.publishAsync("channel1", "some message");
         await conn.client.publishAsync("channel2", "some message");
+        await new Promise(resolve => setTimeout(resolve, 200));
         expect(messages[0]).toEqual(["channel?", "channel1", "some message"]);
         expect(messages[1]).toEqual(["channel?", "channel2", "some message"]);
     });
@@ -157,6 +159,7 @@ describe("PubSub", () => {
 
         await conn.client.publishAsync("channel1", "some message");
         await conn.client.publishAsync("channel2", "some message");
+        await new Promise(resolve => setTimeout(resolve, 200));
         expect(messages).toHaveLength(0);
     });
     
@@ -180,6 +183,7 @@ describe("PubSub", () => {
         
         await anotherConn.unsubscribe("channel");
         await anotherConn.punsubscribe("test?");
+        await new Promise(resolve => setTimeout(resolve, 200));
         expect(messages).toHaveLength(4);
         expect(messages[0]).toEqual(["subscribe", "channel"]);
         expect(messages[1]).toEqual(["psubscribe", "test?"]);
