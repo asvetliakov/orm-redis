@@ -3,10 +3,10 @@ import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
 import { RelationProperty } from "../../Decorators/RelationProperty";
 import { DuplicateIdsInEntityError, MetadataError } from "../../Errors/Errors";
-import { REDIS_COLLECTION_VALUE, REDIS_VALUE } from "../../Metadata/Metadata";
+import { PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_PROPERTIES, REDIS_VALUE } from "../../Metadata/Metadata";
 import { ShouldThrowError } from "../../testutils/ShouldThrowError";
 import { TestRedisInitialCollectionValue, TestRedisInitialValue } from "../../testutils/TestDecorators";
-import { Operator } from "../Operator";
+import { HydrationData, Operator } from "../Operator";
 
 let operator: Operator;
 
@@ -1723,6 +1723,74 @@ describe("Load", () => {
         const res = operator.getLoadOperation(1, E);
         expect(res).toMatchSnapshot();
     });
+
+    it("Return load operation with skipped relation maps/sets", () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+        }
+        @Hash()
+        class E {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => [Rel, Set])
+            public relSet1: Set<any>;
+
+            @RelationProperty(type => [Rel, Map])
+            public relMap1: Map<string, any>;
+
+            @RelationProperty(type => [Rel, Set])
+            public relSet2: Set<any>;
+
+            @RelationProperty(type => [Rel, Map])
+            public relMap2: Map<string, any>;
+
+            @Property(Set)
+            public nonRelSet: Set<any>;
+
+            @Property(Map)
+            public nonRelMap: Map<any, any>;
+        }
+        const res = operator.getLoadOperation(1, E, ["relSet1", "relMap1", "nonRelSet", "nonRelMap"]);
+        // nonRelSet/nonRelMap will be loaded since it's not relations
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Loads hash by full hash id", () => {
+        @Hash()
+        class E {
+            @IdentifyProperty(Number)
+            public id: number;
+
+            @Property(Set)
+            public set: Set<any>;
+
+            @Property(Map)
+            public map: Map<string, any>;
+        }
+
+        const res = operator.getLoadOperation("e:E:1", E);
+        expect(res).toMatchSnapshot();
+    });
+
+    it("Returns undefined operation if pass 'null' as id", () => {
+        @Hash()
+        class E {
+            @IdentifyProperty(Number)
+            public id: number;
+
+            @Property(Set)
+            public set: Set<any>;
+
+            @Property(Map)
+            public map: Map<string, any>;
+        }
+
+        const res = operator.getLoadOperation("null", E);
+        expect(res).toBeUndefined();
+    });
 });
 
 describe("Update metadata", () => {
@@ -2073,5 +2141,408 @@ describe("Reset metadata", () => {
 
         expect(Reflect.getMetadata(REDIS_COLLECTION_VALUE, a, "set1")).toBeUndefined();
         expect(Reflect.getMetadata(REDIS_COLLECTION_VALUE, a, "map1")).toBeUndefined();
+    });
+});
+
+describe("hydrateData", () => {
+    it("Doesn't hydrate null or undefined values", () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+        }
+        const data = new Map<string, HydrationData>();
+        data.set("e:A:1", { id: "e:A:1", entityClass: A, redisData: null });
+        data.set("e:A:2", { id: "e:A:2", entityClass: A, redisData: undefined as any });
+        data.set("a:e:A:2:map", { id: "a:e:A:2:map", redisData: undefined as any });
+        data.set("a:e:A:2:map2", { id: "a:e:A:2:map2", redisData: null });
+        data.set("a:e:A:2:set", { id: "a:e:A:2:set", redisData: undefined as any });
+        data.set("a:e:A:2:set2", { id: "a:e:A:2:set2", redisData: null });
+        const res = operator.hydrateData(data);
+        expect(res).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
+    });
+
+    it("Hydrates simple entity", () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public prop1: string;
+
+            @Property()
+            public prop2: boolean;
+
+            @Property()
+            public prop3: number;
+
+            @Property(Date)
+            public prop4: Date;
+
+            @Property()
+            public prop5: string | null;
+
+            @Property()
+            public prop6: string | undefined;
+
+            @Property("myString")
+            public prop7: string;
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: string;
+        }
+
+        const data = new Map<string, HydrationData>();
+        data.set("e:A:1", {
+            id: "e:A:1", entityClass: A, redisData: {
+                id: "i:1",
+                prop1: "s:test",
+                prop2: "b:0",
+                prop3: "i:10",
+                prop4: "d:" + new Date(Date.UTC(2016, 10, 10, 10, 10, 10)).getTime(),
+                prop5: "null",
+                myString: "s:my string"
+            }
+        });
+        data.set("e:B:2", {
+            id: "e:B:2", entityClass: B, redisData: {
+                id: "s:someid"
+            }
+        });
+        const res = operator.hydrateData(data);
+        expect(res).toHaveLength(2);
+        const a: A = res[0];
+        expect(a).toBeInstanceOf(A);
+        expect(a.id).toBe(1);
+        expect(a.prop1).toBe("test");
+        expect(a.prop2).toBe(false);
+        expect(typeof a.prop2).toBe("boolean");
+        expect(a.prop3).toBe(10);
+        expect(a.prop4.getTime()).toBe(new Date(Date.UTC(2016, 10, 10, 10, 10, 10)).getTime());
+        expect(a.prop5).toBeNull();
+        expect(a.prop6).toBeUndefined();
+        expect(a.prop7).toBe("my string");
+
+        const b: B = res[1];
+        expect(b).toBeInstanceOf(B);
+        expect(b.id).toBe("someid");
+    });
+
+    it("Hydrates maps and sets", () => {
+        const data = new Map<string, HydrationData>();
+        data.set("m:e:A:1", {
+            id: "m:e:A:1", redisData: {
+                "i:1": "s:some string",
+                "s:1": "b:1",
+                "i:2": "i:10"
+            }
+        });
+        data.set("a:e:A:1", {
+            id: "a:e:A:1", redisData: ["s:1", "i:1"]
+        });
+
+        const res = operator.hydrateData(data);
+        expect(res).toHaveLength(2);
+        const map: Map<any, any> = res[0];
+        expect(map).toBeInstanceOf(Map);
+        expect(map.get(1)).toBe("some string");
+        expect(map.get("1")).toBe(true);
+        expect(typeof map.get("1")).toBe("boolean");
+        expect(map.get(2)).toBe(10);
+
+        const set: Set<any> = res[1];
+        expect(set).toBeInstanceOf(Set);
+        expect(set.has(1)).toBeTruthy();
+        expect(set.has("1")).toBeTruthy();
+    });
+
+    it("Treats empty sets as undefined", () => {
+        const data = new Map<string, HydrationData>();
+        data.set("a:e:A:1", {
+            id: "a:e:A:1", redisData: []
+        });
+        const res = operator.hydrateData(data);
+        expect(res[0]).toBeUndefined();
+    });
+
+    it("Hydrates entity with non relation maps and sets", () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property(Map)
+            public map1: Map<any, any>;
+
+            @Property(Set)
+            public set1: Set<any>;
+
+            @Property(Map)
+            public map2: Map<any, any>;
+
+            @Property(Set)
+            public set2: Set<any>;
+        }
+
+        const data = new Map<string, HydrationData>();
+        data.set("e:A:1", {
+            id: "e:A:1", entityClass: A, redisData: {
+                id: "i:1",
+                map1: "m:e:A:1:map1",
+                set1: "a:e:A:1:set1",
+                map2: "m:e:A:1:map2",
+                set2: "a:e:A:1:set2",
+            }
+        });
+        data.set("m:e:A:1:map1", {
+            id: "m:e:A:1:map1", redisData: {
+                "i:1": "s:val"
+            }
+        });
+        data.set("a:e:A:1:set1", {
+            id: "a:e:A:1:set1", redisData: [
+                "s:val"
+            ]
+        });
+        const res = operator.hydrateData(data);
+        const a: A = res.find(v => v instanceof A);
+        expect(a.map1).toBeInstanceOf(Map);
+        expect(a.set1).toBeInstanceOf(Set);
+        expect(a.map2).toBeUndefined();
+        expect(a.set2).toBeUndefined();
+        expect(a.map1.get(1)).toBe("val");
+        expect(a.set1.has("val")).toBeTruthy();
+    });
+
+    it("Hydrates entity with single relation", () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public aProp: string;
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public bProp: string;
+
+            @RelationProperty(type => A)
+            public aRel: A;
+        }
+
+        @Hash()
+        class C {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public cProp: string;
+
+            @RelationProperty(type => B)
+            public bRel: B;
+        }
+
+        const data = new Map<string, HydrationData>();
+        data.set("e:C:1", {
+            id: "e:C:1", entityClass: C, redisData: {
+                id: "i:1",
+                cProp: "s:c prop 1",
+                bRel: "e:B:1"
+            }
+        });
+        data.set("e:C:2", {
+            id: "e:C:2", entityClass: C, redisData: {
+                id: "i:2",
+                cProp: "s:c prop 2",
+                bRel: "e:B:2"
+            }
+        });
+        data.set("e:B:1", {
+            id: "e:B:1", entityClass: B, redisData: {
+                id: "i:1",
+                bProp: "s:b prop 1",
+                aRel: "e:A:1"
+            }
+        });
+        data.set("e:B:2", {
+            id: "e:B:2", entityClass: B, redisData: {
+                id: "i:2",
+                bProp: "s:b prop 2",
+                aRel: "e:A:1"
+            }
+        });
+        data.set("e:A:1", {
+            id: "e:A:1", entityClass: A, redisData: {
+                id: "i:1",
+                aProp: "s:a prop"
+            }
+        });
+        const res = operator.hydrateData(data);
+        expect(res).toHaveLength(5);
+        const [c1, b1, a1, c2, b2]: [C, B, A, C, B] = res as any;
+        expect(c1).toBeInstanceOf(C);
+        expect(c1.id).toBe(1);
+        expect(c1.cProp).toBe("c prop 1");
+        expect(c1.bRel).toBe(b1);
+        expect(c1.bRel.aRel).toBe(a1);
+        expect(c2).toBeInstanceOf(C);
+        expect(c2.id).toBe(2);
+        expect(c2.cProp).toBe("c prop 2");
+        expect(c2.bRel).toBe(b2);
+        expect(c2.bRel.aRel).toBe(a1);
+        expect(b1).toBeInstanceOf(B);
+        expect(b1.id).toBe(1);
+        expect(b1.bProp).toBe("b prop 1");
+        expect(b1.aRel).toBe(a1);
+        expect(b2).toBeInstanceOf(B);
+        expect(b2.id).toBe(2);
+        expect(b2.bProp).toBe("b prop 2");
+        expect(b2.aRel).toBe(a1);
+        expect(a1).toBeInstanceOf(A);
+        expect(a1.id).toBe(1);
+        expect(a1.aProp).toBe("a prop");
+    });
+
+    it("Hydrates circular relations", () => {
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            public b: B;
+        }
+
+        @Hash()
+        class B {
+            @IdentifyProperty()
+            public id: number;
+
+            public a: A;
+        }
+
+        const aMetadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, A);
+        aMetadata.push({
+            isRelation: true,
+            propertyName: "b",
+            propertyRedisName: "b",
+            propertyType: B,
+            relationType: B,
+            isIdentifyColumn: false,
+            relationOptions: { cascadeInsert: false, cascadeUpdate: false }
+        });
+        const bMetadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, B);
+        bMetadata.push({
+            isRelation: true,
+            propertyName: "a",
+            propertyRedisName: "a",
+            propertyType: A,
+            relationType: A,
+            isIdentifyColumn: false,
+            relationOptions: { cascadeInsert: false, cascadeUpdate: false }
+        });
+
+        const data = new Map<string, HydrationData>();
+        data.set("e:A:1", {
+            id: "e:A:1", entityClass: A, redisData: {
+                id: "i:1",
+                b: "e:B:1"
+            }
+        });
+        data.set("e:B:1", {
+            id: "e:B:1", entityClass: B, redisData: {
+                id: "i:1",
+                a: "e:A:1"
+            }
+        });
+        const res = operator.hydrateData(data);
+        expect(res).toHaveLength(2);
+
+        const a: A = res[0];
+        const b: B = res[1];
+        expect(a.b).toBe(b);
+        expect(b.a).toBe(a);
+    });
+
+    it("Hydrates sets and maps with relations", () => {
+        @Hash()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        @Hash()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => [Rel, Set])
+            public set1: Set<Rel>;
+
+            @RelationProperty(type => [Rel, Map])
+            public map1: Map<number, Rel>;
+        }
+
+        const data = new Map<string, HydrationData>();
+        data.set("e:A:1", {
+            id: "e:A:1", entityClass: A, redisData: {
+                id: "i:1",
+                set1: "a:e:A:1:set1",
+                map1: "m:e:A:1:map1"
+            }
+        });
+        data.set("a:e:A:1:set1", {
+            id: "a:e:A:1:set1", redisData: [
+                "e:Rel:1",
+                "e:Rel:2",
+                "e:Rel:3"
+            ]
+        });
+        data.set("m:e:A:1:map1", {
+            id: "m:e:A:1:map1", redisData: {
+                "i:1": "e:Rel:1",
+                "i:2": "null",
+                "i:3": "e:Rel:3",
+                "i:4": "e:Rel:4"
+            }
+        });
+        data.set("e:Rel:1", {
+            id: "e:Rel:1", entityClass: Rel, redisData: {
+                id: "i:1"
+            }
+        });
+        data.set("e:Rel:2", {
+            id: "e:Rel:2", entityClass: Rel, redisData: {
+                id: "i:2"
+            }
+        });
+        data.set("e:Rel:3", {
+            id: "e:Rel:3", entityClass: Rel, redisData: {
+                id: "i:3"
+            }
+        });
+        const res = operator.hydrateData(data);
+        const a1: A = res.find(v => v instanceof A)!;
+        expect(a1.map1).toBeInstanceOf(Map);
+        expect(a1.set1).toBeInstanceOf(Set);
+        expect(a1.set1.size).toBe(3);
+        const rels = [...a1.set1.values()];
+        expect(rels[0]).toBeInstanceOf(Rel);
+        expect(rels[1]).toBeInstanceOf(Rel);
+        expect(rels[2]).toBeInstanceOf(Rel);
+        expect(a1.map1.get(1)!.id).toBe(1);
+        expect(a1.map1.get(2)).toBeNull();
+        expect(a1.map1.get(3)!.id).toBe(3);
+        expect(a1.map1.has(4)).toBeTruthy();
+        expect(a1.map1.get(4)).toBeUndefined();
     });
 });

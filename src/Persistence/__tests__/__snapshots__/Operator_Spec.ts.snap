@@ -1,48 +1,119 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Load Loads hash by full hash id 1`] = `
+Object {
+  "entityId": "e:E:1",
+  "hashes": Array [
+    "m:e:E:1:map",
+  ],
+  "relationMappings": Array [],
+  "sets": Array [
+    "a:e:E:1:set",
+  ],
+}
+`;
+
 exports[`Load Return load operation for hash with non relation sets or maps 1`] = `
 Object {
-  "entityFullId": "e:E:1",
+  "entityId": "e:E:1",
   "hashes": Array [
-    "e:E:1:map",
+    "m:e:E:1:map",
   ],
+  "relationMappings": Array [],
   "sets": Array [
-    "e:E:1:set",
+    "a:e:E:1:set",
   ],
 }
 `;
 
 exports[`Load Return load operation for hash with relation sets or maps 1`] = `
 Object {
-  "entityFullId": "e:E:1",
+  "entityId": "e:E:1",
   "hashes": Array [
-    "e:E:1:map",
+    "m:e:E:1:map",
+  ],
+  "relationMappings": Array [
+    Object {
+      "id": "a:e:E:1:set",
+      "ownerId": "e:E:1",
+      "relationClass": [Function],
+      "type": "set",
+    },
+    Object {
+      "id": "m:e:E:1:map",
+      "ownerId": "e:E:1",
+      "relationClass": [Function],
+      "type": "map",
+    },
   ],
   "sets": Array [
-    "e:E:1:set",
+    "a:e:E:1:set",
   ],
 }
 `;
 
 exports[`Load Return load operation for map/sets with specified redis name 1`] = `
 Object {
-  "entityFullId": "e:E:1",
+  "entityId": "e:E:1",
   "hashes": Array [
-    "e:E:1:myMap",
-    "e:E:1:myMap2",
+    "m:e:E:1:myMap",
+    "m:e:E:1:myMap2",
+  ],
+  "relationMappings": Array [
+    Object {
+      "id": "a:e:E:1:mySet",
+      "ownerId": "e:E:1",
+      "relationClass": [Function],
+      "type": "set",
+    },
+    Object {
+      "id": "m:e:E:1:myMap",
+      "ownerId": "e:E:1",
+      "relationClass": [Function],
+      "type": "map",
+    },
   ],
   "sets": Array [
-    "e:E:1:mySet",
-    "e:E:1:mySet2",
+    "a:e:E:1:mySet",
+    "a:e:E:1:mySet2",
   ],
 }
 `;
 
 exports[`Load Return load operation for simple hash 1`] = `
 Object {
-  "entityFullId": "e:E:1",
+  "entityId": "e:E:1",
   "hashes": Array [],
+  "relationMappings": Array [],
   "sets": Array [],
+}
+`;
+
+exports[`Load Return load operation with skipped relation maps/sets 1`] = `
+Object {
+  "entityId": "e:E:1",
+  "hashes": Array [
+    "m:e:E:1:relMap2",
+    "m:e:E:1:nonRelMap",
+  ],
+  "relationMappings": Array [
+    Object {
+      "id": "a:e:E:1:relSet2",
+      "ownerId": "e:E:1",
+      "relationClass": [Function],
+      "type": "set",
+    },
+    Object {
+      "id": "m:e:E:1:relMap2",
+      "ownerId": "e:E:1",
+      "relationClass": [Function],
+      "type": "map",
+    },
+  ],
+  "sets": Array [
+    "a:e:E:1:relSet2",
+    "a:e:E:1:nonRelSet",
+  ],
 }
 `;
 
@@ -68,7 +139,7 @@ Object {
         "s:4": "e:Rel:2",
       },
       "deleteKeys": Array [],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
     Object {
       "changeKeys": Object {
@@ -95,7 +166,7 @@ exports[`Save/Delete/Update Multiple relations in maps Deletes relation maps but
 Object {
   "deleteHashes": Array [
     "e:A:1",
-    "e:A:1:set1",
+    "m:e:A:1:set1",
   ],
   "deletesSets": Array [],
   "modifyHashes": Array [],
@@ -121,7 +192,7 @@ Object {
         "i:1": "e:B:1",
       },
       "deleteKeys": Array [],
-      "hashId": "e:A:1:bMap",
+      "hashId": "m:e:A:1:bMap",
     },
     Object {
       "changeKeys": Object {
@@ -136,7 +207,7 @@ Object {
         "i:1": "e:A:1",
       },
       "deleteKeys": Array [],
-      "hashId": "e:B:1:aMap",
+      "hashId": "m:e:B:1:aMap",
     },
   ],
   "modifySets": Array [],
@@ -162,7 +233,7 @@ Object {
         "s:2": "e:Rel:2",
       },
       "deleteKeys": Array [],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
     Object {
       "changeKeys": Object {
@@ -204,7 +275,7 @@ Object {
         "i:2": "e:Rel:2",
       },
       "deleteKeys": Array [],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
   ],
   "modifySets": Array [],
@@ -230,7 +301,7 @@ Object {
         "i:2": "e:Rel:2",
       },
       "deleteKeys": Array [],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
     Object {
       "changeKeys": Object {
@@ -279,7 +350,7 @@ Object {
         "i:2": "e:Rel:2",
       },
       "deleteKeys": Array [],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
     Object {
       "changeKeys": Object {},
@@ -316,7 +387,7 @@ Object {
       "deleteKeys": Array [
         "i:2",
       ],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
     Object {
       "changeKeys": Object {
@@ -346,7 +417,7 @@ Object {
       "deleteKeys": Array [
         "i:1",
       ],
-      "hashId": "e:E:1:rels",
+      "hashId": "m:e:E:1:rels",
     },
   ],
   "modifySets": Array [],
@@ -359,7 +430,7 @@ Object {
     "e:A:1",
   ],
   "deletesSets": Array [
-    "e:A:1:set1",
+    "a:e:A:1:set1",
   ],
   "modifyHashes": Array [],
   "modifySets": Array [],
@@ -394,14 +465,14 @@ Object {
         "e:B:1",
       ],
       "removeValues": Array [],
-      "setName": "e:A:1:bSet",
+      "setName": "a:e:A:1:bSet",
     },
     Object {
       "addValues": Array [
         "e:A:1",
       ],
       "removeValues": Array [],
-      "setName": "e:B:1:aSet",
+      "setName": "a:e:B:1:aSet",
     },
   ],
 }
@@ -444,7 +515,7 @@ Object {
         "e:Rel:2",
       ],
       "removeValues": Array [],
-      "setName": "e:E:1:rels",
+      "setName": "a:e:E:1:rels",
     },
   ],
 }
@@ -471,7 +542,7 @@ Object {
         "e:Rel:2",
       ],
       "removeValues": Array [],
-      "setName": "e:E:1:rels",
+      "setName": "a:e:E:1:rels",
     },
   ],
 }
@@ -524,7 +595,7 @@ Object {
         "e:Rel:2",
       ],
       "removeValues": Array [],
-      "setName": "e:E:1:rels",
+      "setName": "a:e:E:1:rels",
     },
   ],
 }
@@ -557,7 +628,7 @@ Object {
     Object {
       "addValues": Array [],
       "removeValues": Array [],
-      "setName": "e:E:1:rels",
+      "setName": "a:e:E:1:rels",
     },
   ],
 }
@@ -590,7 +661,7 @@ Object {
       "removeValues": Array [
         "e:Rel:2",
       ],
-      "setName": "e:E:1:rels",
+      "setName": "a:e:E:1:rels",
     },
   ],
 }
@@ -613,7 +684,7 @@ Object {
       "removeValues": Array [
         "e:Rel:1",
       ],
-      "setName": "e:E:1:rels",
+      "setName": "a:e:E:1:rels",
     },
   ],
 }
@@ -650,14 +721,14 @@ Object {
         "s:7": "null",
       },
       "deleteKeys": Array [],
-      "hashId": "e:A:1:map1",
+      "hashId": "m:e:A:1:map1",
     },
     Object {
       "changeKeys": Object {
         "s:1": "b:1",
       },
       "deleteKeys": Array [],
-      "hashId": "e:A:1:map4",
+      "hashId": "m:e:A:1:map4",
     },
   ],
   "modifySets": Array [
@@ -668,7 +739,7 @@ Object {
         "i:3",
       ],
       "removeValues": Array [],
-      "setName": "e:A:1:set1",
+      "setName": "a:e:A:1:set1",
     },
     Object {
       "addValues": Array [
@@ -677,7 +748,7 @@ Object {
         "s:3",
       ],
       "removeValues": Array [],
-      "setName": "e:A:1:anotherSet",
+      "setName": "a:e:A:1:anotherSet",
     },
     Object {
       "addValues": Array [
@@ -686,7 +757,7 @@ Object {
         "b:1",
       ],
       "removeValues": Array [],
-      "setName": "e:A:1:set3",
+      "setName": "a:e:A:1:set3",
     },
     Object {
       "addValues": Array [
@@ -694,7 +765,7 @@ Object {
         "s:2",
       ],
       "removeValues": Array [],
-      "setName": "e:A:1:set6",
+      "setName": "a:e:A:1:set6",
     },
   ],
 }
@@ -740,14 +811,14 @@ Object {
 exports[`Save/Delete/Update Simple map and sets changing and updating Changing 1`] = `
 Object {
   "deleteHashes": Array [
-    "e:A:1:mapToNull",
-    "e:A:1:mapToUndefined",
-    "e:A:1:mapEmptied",
+    "m:e:A:1:mapToNull",
+    "m:e:A:1:mapToUndefined",
+    "m:e:A:1:mapEmptied",
   ],
   "deletesSets": Array [
-    "e:A:1:setToNull",
-    "e:A:1:setToUndefined",
-    "e:A:1:setEmptied",
+    "a:e:A:1:setToNull",
+    "a:e:A:1:setToUndefined",
+    "a:e:A:1:setEmptied",
   ],
   "modifyHashes": Array [
     Object {
@@ -774,7 +845,7 @@ Object {
         "s:6",
         "s:7",
       ],
-      "hashId": "e:A:1:mapChanged",
+      "hashId": "m:e:A:1:mapChanged",
     },
     Object {
       "changeKeys": Object {
@@ -783,7 +854,7 @@ Object {
         "s:3": "i:5",
       },
       "deleteKeys": Array [],
-      "hashId": "e:A:1:createdNewMap",
+      "hashId": "m:e:A:1:createdNewMap",
     },
   ],
   "modifySets": Array [
@@ -794,7 +865,7 @@ Object {
       "removeValues": Array [
         "i:1",
       ],
-      "setName": "e:A:1:setModified",
+      "setName": "a:e:A:1:setModified",
     },
     Object {
       "addValues": Array [
@@ -802,7 +873,7 @@ Object {
         "s:11",
       ],
       "removeValues": Array [],
-      "setName": "e:A:1:createdNewSet",
+      "setName": "a:e:A:1:createdNewSet",
     },
   ],
 }
@@ -812,16 +883,16 @@ exports[`Save/Delete/Update Simple map and sets changing and updating Deleting e
 Object {
   "deleteHashes": Array [
     "e:A:1",
-    "e:A:1:mapChanged",
-    "e:A:1:mapToNull",
-    "e:A:1:mapToUndefined",
-    "e:A:1:mapEmptied",
+    "m:e:A:1:mapChanged",
+    "m:e:A:1:mapToNull",
+    "m:e:A:1:mapToUndefined",
+    "m:e:A:1:mapEmptied",
   ],
   "deletesSets": Array [
-    "e:A:1:setModified",
-    "e:A:1:setToNull",
-    "e:A:1:setToUndefined",
-    "e:A:1:setEmptied",
+    "a:e:A:1:setModified",
+    "a:e:A:1:setToNull",
+    "a:e:A:1:setToUndefined",
+    "a:e:A:1:setEmptied",
   ],
   "modifyHashes": Array [],
   "modifySets": Array [],
@@ -933,7 +1004,7 @@ Object {
         "s:1": "s:sometext",
       },
       "deleteKeys": Array [],
-      "hashId": "e:Rel:1:map1",
+      "hashId": "m:e:Rel:1:map1",
     },
     Object {
       "changeKeys": Object {
@@ -952,7 +1023,7 @@ Object {
         "s:3",
       ],
       "removeValues": Array [],
-      "setName": "e:Rel:1:set1",
+      "setName": "a:e:Rel:1:set1",
     },
   ],
 }
@@ -976,7 +1047,7 @@ Object {
     Object {
       "changeKeys": Object {},
       "deleteKeys": Array [],
-      "hashId": "e:Rel:1:map1",
+      "hashId": "m:e:Rel:1:map1",
     },
     Object {
       "changeKeys": Object {
@@ -990,7 +1061,7 @@ Object {
     Object {
       "addValues": Array [],
       "removeValues": Array [],
-      "setName": "e:Rel:1:set1",
+      "setName": "a:e:Rel:1:set1",
     },
   ],
 }
@@ -1016,7 +1087,7 @@ Object {
     Object {
       "changeKeys": Object {},
       "deleteKeys": Array [],
-      "hashId": "e:Rel:1:map1",
+      "hashId": "m:e:Rel:1:map1",
     },
     Object {
       "changeKeys": Object {
@@ -1031,7 +1102,7 @@ Object {
     Object {
       "addValues": Array [],
       "removeValues": Array [],
-      "setName": "e:Rel:1:set1",
+      "setName": "a:e:Rel:1:set1",
     },
   ],
 }

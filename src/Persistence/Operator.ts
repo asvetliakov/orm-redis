@@ -1,5 +1,5 @@
 import { DuplicateIdsInEntityError, MetadataError } from "../Errors/Errors";
-import { getRedisHashFullId, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_HASH, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
+import { getRedisHashFullId, getRedisHashProperties, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_HASH, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";
 /**
  * Hash key add/remove operation. This applies for creating new hash and for modifying existing hash
@@ -74,17 +74,51 @@ export interface PersistenceOperation {
 
 export interface LoadOperation {
     /**
-     * Full entity id
+     * Full entity id to load
      */
-    entityFullId: string;
+    entityId: string;
     /**
-     * Entity sets to load
+     * Additional Sets to load
      */
     sets: string[];
     /**
-     * Entity hashes to load
+     * Additional Hashes to load
      */
     hashes: string[];
+    /**
+     * Relation mapping
+     */
+    relationMappings: Array<{
+        /**
+         * Owner hash id
+         */
+        ownerId: string;
+        /**
+         * Relation class
+         */
+        relationClass: Function;
+        /**
+         * Mapping type for relation value
+         */
+        type: "key" | "map" | "set";
+        /**
+         * Mapping id. for key it's the hash key, for map/sets it's the map/set full id
+         */
+        id: string;
+    }>;
+}
+
+export interface HydrationData {
+    // Hash/Set id
+    id: string;
+    /**
+     * Class constructor if the data is entity properties
+     */
+    entityClass?: Function;
+    /**
+     * Raw data
+     */
+    redisData: { [key: string]: string } | string[] | null;
 }
 
 export interface EntityWithId {
@@ -151,7 +185,7 @@ export class Operator {
             if (hasPrototypeOf(valueType, Set) || hasPrototypeOf(valueType, Map)) {
                 const redisInitialCollectionValue: undefined | string[] | { [key: string]: string } = Reflect.getMetadata(REDIS_COLLECTION_VALUE, entity, propMetadata.propertyName);
                 const deleted = !value || ((value instanceof Set || value instanceof Map) && value.size === 0);
-                const collectionName = `${fullHashId}:${propMetadata.propertyRedisName}`;
+                const collectionId = this.prepareCollectionValue(fullHashId, propMetadata)!;
                 if (deleted) {
                     // Deleted or wasn't set
                     // 1. had val -> null. Delete map/set and set prop to "null"
@@ -161,12 +195,12 @@ export class Operator {
                     // 5. had undefined -> undefined. Nop
                     // 6. had undefined -> null. Add "null" prop
                     // 7. had val -> become empty set or map
-                    if (initialPropertyRedisValue && initialPropertyRedisValue !== "null") {
+                    if (initialPropertyRedisValue && initialPropertyRedisValue !== "null" && redisInitialCollectionValue) {
                         // 1, 2, 7
                         if (hasPrototypeOf(valueType, Set)) {
-                            operation.deletesSets.push(collectionName);
+                            operation.deletesSets.push(collectionId);
                         } else if (hasPrototypeOf(valueType, Map)) {
-                            operation.deleteHashes.push(collectionName);
+                            operation.deleteHashes.push(collectionId);
                         }
                         value === null
                             ? hashPropOperation.changeKeys[propMetadata.propertyRedisName] = this.prepareSimpleValue(null)!
@@ -256,7 +290,7 @@ export class Operator {
                             }
                             // key is preparedKey
                             for (const key of Object.keys(redisInitialCollectionValue)) {
-                                const convertedKey = this.unprepareSimpleValue(key);
+                                const convertedKey = this.unserializeValue(key);
                                 if (typeof convertedKey !== "undefined" && !value.has(convertedKey)) {
                                     deleted.add(key);
                                 }
@@ -272,21 +306,21 @@ export class Operator {
                             }
                         }
                     }
-                    if (initialPropertyRedisValue !== this.prepareCollectionValue(value, collectionName)) {
+                    if (initialPropertyRedisValue !== collectionId) {
                         // Add link to set/map
-                        hashPropOperation.changeKeys[propMetadata.propertyRedisName] = this.prepareCollectionValue(value, collectionName);
+                        hashPropOperation.changeKeys[propMetadata.propertyRedisName] = collectionId;
                     }
 
                     // calculate differences from original collections
                     if (value instanceof Set) {
                         operation.modifySets.push({
-                            setName: collectionName,
+                            setName: collectionId,
                             addValues: [...added.keys()],
                             removeValues: [...deleted.keys()]
                         });
                     } else if (value instanceof Map) {
                         operation.modifyHashes.push({
-                            hashId: collectionName,
+                            hashId: collectionId,
                             changeKeys: [...added.keys(), ...changed.keys()].reduce((obj: { [key: string]: string }, key) => {
                                 const val = propMetadata.isRelation
                                     ? this.getFullIdForHashObject(added.has(key) ? added.get(key) : changed.get(key))
@@ -433,11 +467,11 @@ export class Operator {
 
             if (hasPrototypeOf(valueType, Set)) {
                 if (initialRedisValue && initialRedisValue !== "null") {
-                    operation.deletesSets.push(`${fullHashId}:${propMetadata.propertyRedisName}`);
+                    operation.deletesSets.push(this.prepareCollectionValue(fullHashId, propMetadata)!);
                 }
             } else if (hasPrototypeOf(valueType, Map)) {
                 if (initialRedisValue && initialRedisValue !== "null") {
-                    operation.deleteHashes.push(`${fullHashId}:${propMetadata.propertyRedisName}`);
+                    operation.deleteHashes.push(this.prepareCollectionValue(fullHashId, propMetadata)!);
                 }
             }
             // else if (propMetadata.isRelation && propMetadata.relationOptions.cascadeDelete && value) {
@@ -454,24 +488,66 @@ export class Operator {
      * 
      * @param id 
      * @param hashClass 
+     * @param skipRelations
      * @returns 
      */
-    public getLoadOperation(id: string | number, hashClass: Function): LoadOperation {
+    public getLoadOperation(id: string | number, hashClass: Function, skipRelations: string[] = []): LoadOperation | undefined {
         this.checkMetadata(hashClass);
-        const fullHashId = this.getFullIdForHashClass(hashClass, id);
+        const fullHashId = typeof id === "string" && id.startsWith("e:") ? id : this.getFullIdForHashClass(hashClass, id);
 
         const operation: LoadOperation = {
-            entityFullId: fullHashId,
+            entityId: fullHashId,
             hashes: [],
-            sets: []
+            sets: [],
+            relationMappings: []
         };
+        if (id === "null") {
+            return undefined;
+        }
 
+        // operation.hashes.push(fullHashId);
         const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, hashClass);
         for (const propMetadata of metadata) {
             const propType = propMetadata.propertyType;
-            if (hasPrototypeOf(propType, Set) || hasPrototypeOf(propType, Map)) {
-                const collId = `${fullHashId}:${propMetadata.propertyRedisName}`;
-                hasPrototypeOf(propType, Set) ? operation.sets.push(collId) : operation.hashes.push(collId);
+            if (hasPrototypeOf(propType, Set)) {
+                const collId = this.prepareCollectionValue(fullHashId, propMetadata)!;
+                if (propMetadata.isRelation) {
+                    if (!skipRelations.includes(propMetadata.propertyName)) {
+                        operation.relationMappings.push({
+                            ownerId: fullHashId,
+                            relationClass: propMetadata.relationType,
+                            id: collId,
+                            type: "set"
+                        });
+                        operation.sets.push(collId);
+                    }
+                } else {
+                    operation.sets.push(collId);
+                }
+            } else if (hasPrototypeOf(propType, Map)) {
+                const collId = this.prepareCollectionValue(fullHashId, propMetadata)!;
+                if (propMetadata.isRelation) {
+                    if (!skipRelations.includes(propMetadata.propertyName)) {
+                        operation.relationMappings.push({
+                            ownerId: fullHashId,
+                            relationClass: propMetadata.relationType,
+                            id: collId,
+                            type: "map"
+                        });
+                        operation.hashes.push(collId);
+                    }
+                } else {
+                    operation.hashes.push(collId);
+                }
+            } else {
+                if (propMetadata.isRelation && !skipRelations.includes(propMetadata.propertyName)) {
+                    operation.relationMappings.push({
+                        ownerId: fullHashId,
+                        relationClass: propMetadata.relationType,
+                        id: propMetadata.propertyRedisName,
+                        type: "key"
+                    });
+                }
             }
         }
         return operation;
@@ -501,7 +577,7 @@ export class Operator {
                     Reflect.defineMetadata(REDIS_VALUE, this.prepareSimpleValue(null)!, hashObject, propMetadata.propertyName);
                 } else if ((collection instanceof Set || collection instanceof Map) && collection.size > 0) {
                     // Collection have both REDIS_VALUE and REDIS_COLLECTION_VALUE
-                    const collectionValueForProp = this.prepareCollectionValue(collection, `${fullHashId}:${propMetadata.propertyRedisName}`);
+                    const collectionValueForProp = this.prepareCollectionValue(fullHashId, propMetadata);
                     if (collection instanceof Set) {
                         Reflect.defineMetadata(REDIS_VALUE, collectionValueForProp, hashObject, propMetadata.propertyName);
                         const setValues = [...collection.values()].map(
@@ -570,6 +646,113 @@ export class Operator {
                 Reflect.defineMetadata(REDIS_COLLECTION_VALUE, undefined, hashObject, propMetadata.propertyName);
             }
         }
+    }
+
+    /**
+     * Hydrate redis data
+     * 
+     * @param hydrationData 
+     * @returns 
+     */
+    public hydrateData(hydrationData: Map<string, HydrationData>): any[] {
+        const processedData = new Map<string, any>();
+
+        const processData = (data: HydrationData | undefined): void => {
+            if (!data || processedData.has(data.id)) {
+                return;
+            }
+            const { entityClass, id, redisData } = data;
+            if (!redisData) {
+                processedData.set(id, undefined);
+                return;
+            }
+            const dataType = id.slice(0, 2);
+            if (dataType === "e:" && !Array.isArray(redisData) && entityClass) {
+                const entity = new (entityClass as any)();
+                processedData.set(id, entity);
+                const metadata = getRedisHashProperties(entityClass);
+                if (metadata) {
+                    for (const key of Object.keys(redisData)) {
+                        const metadataForKey = metadata.find(m => m.propertyRedisName === key);
+                        if (metadataForKey) {
+                            const val = redisData[key];
+                            const valType = val.slice(0, 2);
+                            // define redis value metadata
+                            Reflect.defineMetadata(REDIS_VALUE, val, entity, metadataForKey.propertyName);
+                            let valueToSet: any;
+                            if (valType === "e:") {
+                                // single relation
+                                // process relation if we didn't do it yet
+                                if (!processedData.has(val)) {
+                                    processData(hydrationData.get(val));
+                                }
+                                // set relation
+                                valueToSet = processedData.get(val);
+                            } else if (valType === "a:" || valType === "m:") {
+                                // hash or sets
+                                if (!processedData.has(val)) {
+                                    processData(hydrationData.get(val));
+                                }
+                                valueToSet = processedData.get(val);
+                                const collHydrationData = hydrationData.get(val);
+                                if (collHydrationData) {
+                                    Reflect.defineMetadata(REDIS_COLLECTION_VALUE, collHydrationData.redisData, entity, metadataForKey.propertyName);
+                                }
+                            } else {
+                                valueToSet = this.unserializeValue(val);
+                            }
+                            if (typeof valueToSet !== "undefined") {
+                                entity[metadataForKey.propertyName] = valueToSet;
+                            }
+                        }
+                    }
+                }
+
+            } else if (dataType === "a:" && Array.isArray(redisData) && redisData.length > 0) {
+                const set = new Set();
+                processedData.set(id, set);
+                for (const setData of redisData) {
+                    const setDataType = setData.slice(0, 2);
+                    
+                    // Entity in set
+                    if (setDataType === "e:") {
+                        // check if we have already processed this entity, otherwise process it
+                        if (!processedData.has(setData)) {
+                            processData(hydrationData.get(setData));
+                        }
+                        // Will be processed at this time
+                        set.add(processedData.get(setData));
+                    } else {
+                        set.add(this.unserializeValue(setData));
+                    }
+                }
+            } else if (dataType === "m:" && !Array.isArray(redisData)) {
+                const map = new Map();
+                processedData.set(id, map);
+                for (const key of Object.keys(redisData)) {
+                    const dataVal = redisData[key];
+                    const unserializedKey = this.unserializeValue(key);
+                    const type = dataVal.slice(0, 2);
+                    if (type === "e:") {
+                        if (!processedData.has(dataVal)) {
+                            processData(hydrationData.get(dataVal));
+                        }
+                        map.set(unserializedKey, processedData.get(dataVal));
+                    } else {
+                        map.set(unserializedKey, this.unserializeValue(dataVal));
+                    }
+                }
+            } else {
+                processedData.set(id, undefined);
+            }
+        };
+
+        for (const data of hydrationData.values()) {
+            processData(data);
+        }
+
+
+        return [...processedData.values()];
     }
 
     /**
@@ -648,15 +831,17 @@ export class Operator {
     }
 
 
-    private prepareCollectionValue(val: Map<any, any> | Set<any>, collectionName: string): string {
-        if (val instanceof Set) {
-            return `a:${collectionName}`;
+    private prepareCollectionValue(hashId: string, propertyMetadata: PropertyMetadata): string | undefined {
+        if (hasPrototypeOf(propertyMetadata.propertyType, Set)) {
+            return `a:${hashId}:${propertyMetadata.propertyRedisName}`;
+        } else if (hasPrototypeOf(propertyMetadata.propertyType, Map)) {
+            return `m:${hashId}:${propertyMetadata.propertyRedisName}`;
         } else {
-            return `m:${collectionName}`;
+            return undefined;
         }
     }
     /**
-     * Prepare value for persiting
+     * Serialize value for persiting
      * 
      * @private
      * @param value 
@@ -684,7 +869,14 @@ export class Operator {
         }
     }
 
-    private unprepareSimpleValue(value: string): string | number | boolean | null | object | Date | undefined {
+    /**
+     * Unserialize value
+     * 
+     * @private
+     * @param value 
+     * @returns 
+     */
+    private unserializeValue(value: string): string | number | boolean | null | object | Date | undefined {
         if (value === "null") {
             return null;
         }
@@ -696,6 +888,10 @@ export class Operator {
             case "b:": return valWithoutType === "1" ? true : false;
             case "d:": return new Date(parseInt(valWithoutType));
             case "j:": return JSON.parse(valWithoutType);
+            // return unserialized value for entities, sets and maps
+            case "e:": return value;
+            case "a:": return value;
+            case "m:": return value;    
         }
         return undefined;
     }

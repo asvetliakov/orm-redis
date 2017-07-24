@@ -1,7 +1,9 @@
 import { Connection } from "../Connection/Connection";
 import { getRedisHashFullId, getRedisHashProperties, isRedisHash } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
-import { Operator, PersistenceOperation } from "./Operator";
+import { HydrationData, LoadOperation, Operator, PersistenceOperation } from "./Operator";
+
+export type EntityType<T> = { new(): T } | Function;
 
 /**
  * Main manager to get/save/remove entities
@@ -107,25 +109,126 @@ export class RedisManager {
      * Get entity
      * 
      * @template T 
-     * @param entity 
+     * @param entityClass 
      * @param id 
-     * @param [relations] 
+     * @param [skipRelations] 
      * @returns 
      */
-    public async get<T>(entity: T, id: string, relations?: keyof T): Promise<T | undefined>;
-    public async get<T>(entity: T, id: string[], relation?: keyof T): Promise<T[] | undefined>;
-    public async get<T>(entity: T, id: string | string[], relations?: keyof T): Promise<T | T[] | undefined> {
-        return Promise.resolve(undefined);
+    public async load<T>(entityClass: EntityType<T>, id: string | number, skipRelations?: Array<keyof T>): Promise<T | undefined>;
+    /**
+     * Get entities
+     * 
+     * @template T 
+     * @param entityClass 
+     * @param id 
+     * @param [skipRelations] 
+     * @returns 
+     */
+    public async load<T>(entityClass: EntityType<T>, id: string[] | number[], skipRelations?: Array<keyof T>): Promise<T[] | undefined>;
+    public async load<T>(entityClass: EntityType<T>, id: string | string[] | number | number[], skipRelations?: Array<keyof T>): Promise<T | undefined | T[]> {
+        const idsToLoad = Array.isArray(id) ? id : [id];
+
+        const entityIdToClassMap: Map<string, EntityType<any>> = new Map();
+        const loadedData: Map<string, HydrationData> = new Map();
+        const rootLoadOperations = idsToLoad.map(id => this.operator.getLoadOperation(id, entityClass, skipRelations)).filter(op => !!op) as LoadOperation[];
+
+        rootLoadOperations.forEach(op => entityIdToClassMap.set(op.entityId, entityClass));
+
+        const recursiveLoadDataWithRelations = async (operations: LoadOperation[]) => {
+            const loadedDataForCall: HydrationData[] = [];
+
+            // easier to use callbacks instead of processing result
+            await this.connection.batch(executor => {
+                for (const op of operations) {
+                    executor.hgetall(op.entityId, (err, result) =>
+                        loadedDataForCall.push({ id: op.entityId, redisData: result, entityClass: entityIdToClassMap.get(op.entityId) }));
+                    for (const hash of op.hashes) {
+                        executor.hgetall(hash, (err, result) => loadedDataForCall.push({ id: hash, redisData: result }));
+                    }
+                    for (const set of op.sets) {
+                        executor.smembers(set, (err, result) => loadedDataForCall.push({ id: set, redisData: result }));
+                    }
+                }
+            });
+            loadedDataForCall.forEach(data => loadedData.set(data.id, data));
+            const allMappings: LoadOperation["relationMappings"] = [];
+            for (const op of operations) {
+                allMappings.push(...op.relationMappings);
+            }
+
+            const relationOperations: Array<LoadOperation | undefined> = [];
+            for (const mapping of allMappings) {
+                const relationClass = mapping.relationClass;
+                switch (mapping.type) {
+                    // single relation in key
+                    case "key": {
+                        const hashVal = loadedDataForCall.find(data => data.id === mapping.ownerId);
+                        if (hashVal && hashVal.redisData && !Array.isArray(hashVal.redisData) && hashVal.redisData[mapping.id]) {
+                            const relationVal = hashVal.redisData[mapping.id];
+                            if (relationVal && !loadedData.has(relationVal)) {
+                                entityIdToClassMap.set(relationVal, relationClass);
+                                relationOperations.push(this.operator.getLoadOperation(relationVal, relationClass));
+                            }
+                        }
+                        break;
+                    }
+                    // set of relations
+                    case "set": {
+                        const set = loadedDataForCall.find(data => data.id === mapping.id);
+                        if (set && set.redisData && Array.isArray(set.redisData)) {
+                            for (const setVal of set.redisData) {
+                                if (!loadedData.has(setVal)) {
+                                    entityIdToClassMap.set(setVal, relationClass);
+                                    relationOperations.push(this.operator.getLoadOperation(setVal, relationClass));
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    // map of relations
+                    case "map": {
+                        const map = loadedDataForCall.find(data => data.id === mapping.id);
+                        if (map && map.redisData && !Array.isArray(map.redisData) && Object.keys(map.redisData).length > 0) {
+                            for (const key of Object.keys(map.redisData)) {
+                                const relVal = map.redisData[key];
+                                if (!loadedData.has(relVal)) {
+                                    entityIdToClassMap.set(relVal, relationClass);
+                                    relationOperations.push(this.operator.getLoadOperation(relVal, relationClass));
+                                }
+                            }
+                        }
+                        break;
+                    }    
+                }
+            }
+            if (relationOperations.length > 0) {
+                await recursiveLoadDataWithRelations(relationOperations.filter(op => !!op) as LoadOperation[]);
+            }
+        };
+        await recursiveLoadDataWithRelations(rootLoadOperations);
+        const hydratedData = this.operator.hydrateData(loadedData);
+        // run subscribers in reverse order
+        hydratedData.reduceRight((unusued, data) => {
+            if (data && data.constructor) {
+                const subscriber = this.subscribers.find(sub => sub.listenTo() === data.constructor);
+                if (subscriber && subscriber.afterLoad) {
+                    subscriber.afterLoad(data);
+                }
+            }
+        }, {});
+
+        return Array.isArray(id)
+            ? hydratedData.filter(data => data && data.constructor === entityClass)
+            : hydratedData.find(data => data && data.constructor === entityClass);
     }
 
     /**
      * Remove entity. Doesn't remove linked relations
      * 
-     * @template T 
      * @param entity 
      * @returns 
      */
-    public async remove<T>(entity: T): Promise<void> { 
+    public async remove(entity: object): Promise<void> { 
         const operation = this.operator.getDeleteOperation(entity);
         if (this.isEmptyPersistenceOperation(operation)) {
             return;

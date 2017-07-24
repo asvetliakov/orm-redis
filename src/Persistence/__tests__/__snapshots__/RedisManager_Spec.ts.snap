@@ -20,12 +20,21 @@ Array [
     "i:1": "s:uno",
     "i:2": "s:dos",
   },
-  Array [
-    "i:3",
-    "i:1",
-    "i:2",
-  ],
 ]
+`;
+
+exports[`Save Doesn't delete relations in maps and sets if skipped them for loading 1`] = `
+Object {
+  "i:1": "e:Rel:1",
+  "i:2": "e:Rel:2",
+}
+`;
+
+exports[`Save Doesn't touch relation if it was skipped for loading 1`] = `
+Object {
+  "id": "i:1",
+  "prop1": "s:abc",
+}
 `;
 
 exports[`Save Doesn't update relations in maps/sets without cascade update 1`] = `
@@ -66,12 +75,6 @@ Array [
     "myMap": "m:e:A:1:myMap",
     "mySet": "a:e:A:1:mySet",
   },
-  Array [
-    "e:Rel:2",
-    "e:Rel:1",
-    "e:Rel:4",
-    "e:Rel:3",
-  ],
   Object {
     "i:1": "e:AnotherRel:1",
     "i:2": "e:AnotherRel:2",
@@ -148,12 +151,12 @@ Array [
   ],
   Array [
     "srem",
-    "e:A:1:set1",
+    "a:e:A:1:set1",
     "i:1",
   ],
   Array [
     "sadd",
-    "e:A:1:set1",
+    "a:e:A:1:set1",
     "i:4",
   ],
   Array [
@@ -173,12 +176,12 @@ Array [
   ],
   Array [
     "hdel",
-    "e:A:1:map1",
+    "m:e:A:1:map1",
     "s:1",
   ],
   Array [
     "hmset",
-    "e:A:1:map1",
+    "m:e:A:1:map1",
     "i:2",
     "s:number2",
   ],
@@ -203,12 +206,6 @@ Array [
     "i:2": "s:number2",
     "i:3": "d:1478769010000",
   },
-  Array [
-    "i:4",
-    "b:1",
-    "s:3",
-    "i:2",
-  ],
 ]
 `;
 
@@ -219,11 +216,11 @@ Array [
   ],
   Array [
     "del",
-    "e:A:1:set1",
+    "a:e:A:1:set1",
   ],
   Array [
     "del",
-    "e:A:1:map1",
+    "m:e:A:1:map1",
   ],
   Array [
     "hdel",
@@ -246,7 +243,6 @@ Array [
     "prop5": "s:abcdef",
   },
   null,
-  Array [],
 ]
 `;
 
@@ -290,12 +286,6 @@ Array [
     "i:3": "d:1478769010000",
     "s:1": "s:string1",
   },
-  Array [
-    "b:1",
-    "s:3",
-    "i:1",
-    "i:2",
-  ],
 ]
 `;
 
@@ -329,7 +319,7 @@ Array [
   ],
   Array [
     "del",
-    "e:A:1:myMap",
+    "m:e:A:1:myMap",
   ],
   Array [
     "hdel",
