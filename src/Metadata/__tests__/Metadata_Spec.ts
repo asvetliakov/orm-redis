@@ -1,110 +1,110 @@
-import { Hash } from "../../Decorators/Hash";
+import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
-import { getRedisHashId, getRedisHashName, getRedisHashProperties, isRedisHash } from "../Metadata";
+import { getEntityId, getEntityName, getEntityProperties, isRedisEntity } from "../Metadata";
 
 describe("isRedisHash()", () => {
     it("returns false for non objects", () => {
-        expect(isRedisHash(null as any)).toBeFalsy();
-        expect(isRedisHash(undefined as any)).toBeFalsy();
-        expect(isRedisHash(0 as any)).toBeFalsy();
-        expect(isRedisHash("" as any)).toBeFalsy();
-        expect(isRedisHash(Symbol() as any)).toBeFalsy();
-        expect(isRedisHash(true as any)).toBeFalsy();
+        expect(isRedisEntity(null as any)).toBeFalsy();
+        expect(isRedisEntity(undefined as any)).toBeFalsy();
+        expect(isRedisEntity(0 as any)).toBeFalsy();
+        expect(isRedisEntity("" as any)).toBeFalsy();
+        expect(isRedisEntity(Symbol() as any)).toBeFalsy();
+        expect(isRedisEntity(true as any)).toBeFalsy();
     });
 
     it("returns false non non redis hash classes instances and simple objects", () => {
         class A { }
-        expect(isRedisHash(new A())).toBeFalsy();
-        expect(isRedisHash({})).toBeFalsy();
+        expect(isRedisEntity(new A())).toBeFalsy();
+        expect(isRedisEntity({})).toBeFalsy();
     });
 
     it("returns true for redis hash class instances", () => {
-        @Hash()
+        @Entity()
         class A { }
-        expect(isRedisHash(new A())).toBeTruthy();
+        expect(isRedisEntity(new A())).toBeTruthy();
     });
 });
 
 describe("getRedisHashId()", () => {
     it("returns undefined for non redis hashes", () => {
         class A { }
-        expect(getRedisHashId(new A())).toBeUndefined();
-        expect(getRedisHashId({})).toBeUndefined();
-        expect(getRedisHashId(null as any)).toBeUndefined();
+        expect(getEntityId(new A())).toBeUndefined();
+        expect(getEntityId({})).toBeUndefined();
+        expect(getEntityId(null as any)).toBeUndefined();
     });
 
     it("returns undefined if redis hash doesn't contain identify property", () => {
-        @Hash()
+        @Entity()
         class A {
             @Property(String)
             public prop: string = "a";
         }
-        expect(getRedisHashId(new A())).toBeUndefined();
+        expect(getEntityId(new A())).toBeUndefined();
     });
 
     it("returns undefined if identify property is not string or number", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty(String)
             public prop: string = new Date() as any;
         }
-        expect(getRedisHashId(new A())).toBeUndefined();
+        expect(getEntityId(new A())).toBeUndefined();
     });
 
     it("returns id", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty(String)
             public prop: string = "abc";
         }
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty(Number)
             public prop: number = 5;
         }
-        expect(getRedisHashId(new A())).toBe("abc");
-        expect(getRedisHashId(new B())).toBe(5);
+        expect(getEntityId(new A())).toBe("abc");
+        expect(getEntityId(new B())).toBe(5);
     });
 });
 
 describe("getRedisHashName()", () => {
     it("Returns undefined for non hashes", () => {
         class A { }
-        expect(getRedisHashName(new A())).toBeUndefined();
-        expect(getRedisHashName(A)).toBeUndefined();
-        expect(getRedisHashName({})).toBeUndefined();
+        expect(getEntityName(new A())).toBeUndefined();
+        expect(getEntityName(A)).toBeUndefined();
+        expect(getEntityName({})).toBeUndefined();
     });
 
     it("Returns redis hash name either for class or object", () => {
-        @Hash()
+        @Entity()
         class A { }
 
-        @Hash("test")
+        @Entity("test")
         class B { }
-        expect(getRedisHashName(new A())).toBe("A");
-        expect(getRedisHashName(A)).toBe("A");
-        expect(getRedisHashName(new B())).toBe("test");
-        expect(getRedisHashName(B)).toBe("test");
+        expect(getEntityName(new A())).toBe("A");
+        expect(getEntityName(A)).toBe("A");
+        expect(getEntityName(new B())).toBe("test");
+        expect(getEntityName(B)).toBe("test");
     });
 });
 
 describe("getRedisHashProperties()", () => {
     it("Returns properties for even hash instance or hash constructor", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
             @Property()
             public prop2: string;
         }
-        expect(getRedisHashProperties(A)).toMatchSnapshot();
-        expect(getRedisHashProperties(new A())).toMatchSnapshot();
+        expect(getEntityProperties(A)).toMatchSnapshot();
+        expect(getEntityProperties(new A())).toMatchSnapshot();
     });
 
     it("Returns undefined for non hashes", () => {
         class A { }
-        expect(getRedisHashProperties({})).toBeUndefined();
-        expect(getRedisHashProperties(A)).toBeUndefined();
+        expect(getEntityProperties({})).toBeUndefined();
+        expect(getEntityProperties(A)).toBeUndefined();
     });
 });

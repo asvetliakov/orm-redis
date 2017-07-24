@@ -1,5 +1,5 @@
 import { DuplicateIdsInEntityError, MetadataError } from "../Errors/Errors";
-import { getRedisHashFullId, getRedisHashProperties, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_HASH, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
+import { getEntityFullId, getEntityProperties, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_ENTITY, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";
 /**
  * Hash key add/remove operation. This applies for creating new hash and for modifying existing hash
@@ -142,7 +142,7 @@ export class Operator {
     public getSaveOperation(entity: { [key: string]: any }, processedEntities: EntityWithId[] = []): PersistenceOperation {
         this.checkMetadata(entity);
         const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, entity.constructor);
-        const fullHashId = this.getFullIdForHashObject(entity);
+        const fullHashId = this.getFullIdForEntityObject(entity);
 
 
         const operation: PersistenceOperation = {
@@ -323,7 +323,7 @@ export class Operator {
                             hashId: collectionId,
                             changeKeys: [...added.keys(), ...changed.keys()].reduce((obj: { [key: string]: string }, key) => {
                                 const val = propMetadata.isRelation
-                                    ? this.getFullIdForHashObject(added.has(key) ? added.get(key) : changed.get(key))
+                                    ? this.getFullIdForEntityObject(added.has(key) ? added.get(key) : changed.get(key))
                                     : this.prepareSimpleValue(added.has(key) ? added.get(key) : changed.get(key));
                                 if (val) {
                                     obj[key] = val;
@@ -442,7 +442,7 @@ export class Operator {
         }
         this.checkMetadata(entity);
         const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, entity.constructor);
-        const fullHashId = this.getFullIdForHashObject(entity);
+        const fullHashId = this.getFullIdForEntityObject(entity);
 
         // Circular objects checking
         // Must check for circular references and prevent delete/insert/update
@@ -493,7 +493,7 @@ export class Operator {
      */
     public getLoadOperation(id: string | number, hashClass: Function, skipRelations: string[] = []): LoadOperation | undefined {
         this.checkMetadata(hashClass);
-        const fullHashId = typeof id === "string" && id.startsWith("e:") ? id : this.getFullIdForHashClass(hashClass, id);
+        const fullHashId = typeof id === "string" && id.startsWith("e:") ? id : this.getFullIdForEntityClass(hashClass, id);
 
         const operation: LoadOperation = {
             entityId: fullHashId,
@@ -566,7 +566,7 @@ export class Operator {
             return;
         }
         processedHashes.push(hashObject);
-        const fullHashId = this.getFullIdForHashObject(hashObject);
+        const fullHashId = this.getFullIdForEntityObject(hashObject);
 
         const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, hashObject.constructor);
         for (const propMetadata of metadatas) {
@@ -632,18 +632,18 @@ export class Operator {
     /**
      * Recursively process given hash and reset metadata
      * 
-     * @param hashObject 
+     * @param entityObj 
      */
-    public resetMetadataInHash(hashObject: { [key: string]: any }): void {
-        this.checkMetadata(hashObject);
-        const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, hashObject.constructor);
+    public resetMetadataInEntityObject(entityObj: { [key: string]: any }): void {
+        this.checkMetadata(entityObj);
+        const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, entityObj.constructor);
         for (const propMetadata of metadatas) {
             // Since we don't support cascade delete no need to delete metadata in relations
 
             // Reflect.deleteMetadata doesn't work for some reason
-            Reflect.defineMetadata(REDIS_VALUE, undefined, hashObject, propMetadata.propertyName);
+            Reflect.defineMetadata(REDIS_VALUE, undefined, entityObj, propMetadata.propertyName);
             if (hasPrototypeOf(Set, propMetadata.propertyType) || hasPrototypeOf(Map, propMetadata.propertyType)) {
-                Reflect.defineMetadata(REDIS_COLLECTION_VALUE, undefined, hashObject, propMetadata.propertyName);
+                Reflect.defineMetadata(REDIS_COLLECTION_VALUE, undefined, entityObj, propMetadata.propertyName);
             }
         }
     }
@@ -670,7 +670,7 @@ export class Operator {
             if (dataType === "e:" && !Array.isArray(redisData) && entityClass) {
                 const entity = new (entityClass as any)();
                 processedData.set(id, entity);
-                const metadata = getRedisHashProperties(entityClass);
+                const metadata = getEntityProperties(entityClass);
                 if (metadata) {
                     for (const key of Object.keys(redisData)) {
                         const metadataForKey = metadata.find(m => m.propertyRedisName === key);
@@ -763,7 +763,7 @@ export class Operator {
      */
     private checkMetadata(entity: object | Function): void {
         const entityType = typeof entity === "object" ? entity.constructor : entity;
-        const hashName = Reflect.getMetadata(REDIS_HASH, entityType);
+        const hashName = Reflect.getMetadata(REDIS_ENTITY, entityType);
         if (!hashName) {
             throw new MetadataError(entityType, "Class must be decorated with @Hash decorator");
         }
@@ -785,10 +785,10 @@ export class Operator {
      * @param entity 
      * @returns 
      */
-    private getFullIdForHashObject(entity: object): string {
+    private getFullIdForEntityObject(entity: object): string {
         this.checkMetadata(entity);
         
-        const hashId = getRedisHashFullId(entity);
+        const hashId = getEntityFullId(entity);
         if (typeof hashId === "undefined") {
             throw new MetadataError(entity.constructor, "Unable to to get hash id");
         }
@@ -803,8 +803,8 @@ export class Operator {
      * @param id 
      * @returns 
      */
-    private getFullIdForHashClass(entityClass: Function, id: string | number): string {
-        const hashId = getRedisHashFullId(entityClass, id);
+    private getFullIdForEntityClass(entityClass: Function, id: string | number): string {
+        const hashId = getEntityFullId(entityClass, id);
         if (!hashId) {
             throw new MetadataError(entityClass, "Not a redis hash. Perhaps you forgot to add @Hash decorator");
         }
@@ -822,7 +822,7 @@ export class Operator {
     private ensureValidRelations(relations: object[], parentEntity: object): void {
         const processedRelations: { [key: string]: object } = {};
         for (const rel of relations) {
-            const relFullId = this.getFullIdForHashObject(rel);
+            const relFullId = this.getFullIdForEntityObject(rel);
             if (processedRelations[relFullId] && processedRelations[relFullId] !== rel) {
                 throw new DuplicateIdsInEntityError(parentEntity, relFullId);
             }
@@ -907,7 +907,7 @@ export class Operator {
     private prepareRelationValue(value: any, metadata: RelationPropertyMetadata): string | undefined {
         this.checkMetadata(metadata.relationType);
         if (value) {
-            return this.getFullIdForHashObject(value);
+            return this.getFullIdForEntityObject(value);
         } else if (value === null) {
             return "null";
         } else {

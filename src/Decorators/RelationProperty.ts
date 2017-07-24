@@ -1,5 +1,5 @@
 import { MetadataError } from "../Errors/Errors";
-import { PropertyMetadata, REDIS_HASH, REDIS_PROPERTIES, RelationOptions } from "../Metadata/Metadata";
+import { PropertyMetadata, REDIS_ENTITY, REDIS_PROPERTIES, RelationOptions } from "../Metadata/Metadata";
 
 /** 
  * default options
@@ -60,7 +60,7 @@ export function RelationProperty(type: RelationTypeFunc, options?: RelationOptio
         if (typeof relationType !== "function") {
             throw new MetadataError(target.constructor, `Invalid relation type for relation ${propertyKey}`);
         }
-        if (!Reflect.hasMetadata(REDIS_HASH, relationType)) {
+        if (!Reflect.hasMetadata(REDIS_ENTITY, relationType)) {
             throw new MetadataError(relationType, "Relation must contain RedisHash decorator");
         }
         const finalOptions = {

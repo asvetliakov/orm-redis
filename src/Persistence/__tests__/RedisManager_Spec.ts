@@ -1,5 +1,5 @@
 import { Connection } from "../../Connection/Connection";
-import { Hash } from "../../Decorators/Hash";
+import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
 import { RelationProperty } from "../../Decorators/RelationProperty";
@@ -29,7 +29,7 @@ afterAll(async () => {
 
 describe("Save", () => {
     it("Saves simple entity", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -80,7 +80,7 @@ describe("Save", () => {
     });
 
     it("Saves only changed properties", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -152,7 +152,7 @@ describe("Save", () => {
     });
 
     it("Doesn't send change requests if there are no any changes", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -175,7 +175,7 @@ describe("Save", () => {
     });
 
     it("Saves single relation without cascade inserting", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number = 1;
@@ -183,7 +183,7 @@ describe("Save", () => {
             @Property()
             public prop: string = "rel";
         }
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -201,7 +201,7 @@ describe("Save", () => {
     });
 
     it("Saves single relation with cascade inserting", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number = 1;
@@ -209,7 +209,7 @@ describe("Save", () => {
             @Property()
             public prop: string = "rel";
         }
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -227,7 +227,7 @@ describe("Save", () => {
     });
 
     it("Saves cyclic relation with cascade inserting", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -237,7 +237,7 @@ describe("Save", () => {
 
             public b: B;
         }
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number = 1;
@@ -262,7 +262,7 @@ describe("Save", () => {
     });
 
     it("Updates single relation with with cascade updating", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -271,7 +271,7 @@ describe("Save", () => {
             public prop1: string = "abc";
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number = 1;
@@ -296,7 +296,7 @@ describe("Save", () => {
     });
 
     it("Doesn't update single relation without cascade update", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -305,7 +305,7 @@ describe("Save", () => {
             public prop1: string = "abc";
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number = 1;
@@ -330,7 +330,7 @@ describe("Save", () => {
     });
 
     it("Doesn't touch relation if it was skipped for loading", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -339,7 +339,7 @@ describe("Save", () => {
             public prop1: string = "abc";
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number = 1;
@@ -363,7 +363,7 @@ describe("Save", () => {
     });
 
     it("Saves only links to multiple relations without cascade insert", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -372,7 +372,7 @@ describe("Save", () => {
             public prop1: string;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: string = "1";
@@ -417,7 +417,7 @@ describe("Save", () => {
     });
 
     it("Saves multiple relations with cascade insert", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -426,7 +426,7 @@ describe("Save", () => {
             public prop1: string;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: string = "1";
@@ -471,7 +471,7 @@ describe("Save", () => {
     });
 
     it("Saves multiple cyclic relations with cascade insert", async () => {
-        @Hash()
+        @Entity()
         class AnotherRel {
             @IdentifyProperty()
             public id: number;
@@ -481,7 +481,7 @@ describe("Save", () => {
 
             public a: A;
         }
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -493,7 +493,7 @@ describe("Save", () => {
             public rel2: AnotherRel;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: string = "1";
@@ -558,7 +558,7 @@ describe("Save", () => {
     });
 
     it("Updates relations in maps/sets with cascade update", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -567,7 +567,7 @@ describe("Save", () => {
             public prop1: string;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: string = "1";
@@ -602,7 +602,7 @@ describe("Save", () => {
     });
 
     it("Doesn't update relations in maps/sets without cascade update", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -611,7 +611,7 @@ describe("Save", () => {
             public prop1: string;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: string = "1";
@@ -637,7 +637,7 @@ describe("Save", () => {
     });
 
     it("Doesn't delete relations in maps and sets if skipped them for loading", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -646,7 +646,7 @@ describe("Save", () => {
             public prop1: string;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: string = "1";
@@ -678,7 +678,7 @@ describe("Save", () => {
 
 describe("Remove", () => {
     it("Removes entity", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -721,13 +721,13 @@ describe("Remove", () => {
     });
 
     it("Doesn't remove relations", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -772,13 +772,13 @@ describe("Remove", () => {
     });
 
     it("Deletes relation sets/maps even if relations weren't loaded", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -814,7 +814,7 @@ describe("Remove", () => {
 
 describe("Load", () => {
     it("Loads simple entity without relations", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -903,7 +903,7 @@ describe("Load", () => {
     });
 
     it("Must not set default initialized set or map to undefined", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -941,7 +941,7 @@ describe("Load", () => {
     });
 
     it("Must not set default undefined set or map to new map/set if undefined", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -979,7 +979,7 @@ describe("Load", () => {
     });
 
     it("Loads multiple entities", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -1006,14 +1006,14 @@ describe("Load", () => {
     });
 
     it("Loads single relation", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
             @Property()
             public relProp: string;
         }
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -1036,14 +1036,14 @@ describe("Load", () => {
     });
 
     it("Loads circular referenced relations", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
 
             public b: B;
         }
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number;
@@ -1069,13 +1069,13 @@ describe("Load", () => {
     });
 
     it("Loads relations in sets and maps", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -1118,13 +1118,13 @@ describe("Load", () => {
     });
 
     it("Loads deep relations", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number;
@@ -1133,7 +1133,7 @@ describe("Load", () => {
             public relA: A;
         }
 
-        @Hash()
+        @Entity()
         class C {
             @IdentifyProperty()
             public id: number;
@@ -1181,7 +1181,7 @@ describe("Load", () => {
     });
 
     it("Skips relations from loading", async () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
@@ -1200,7 +1200,7 @@ describe("Load", () => {
         const rel6 = new Rel();
         rel6.id = 6;
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -1251,7 +1251,7 @@ describe("Load", () => {
 
 describe("Runs entity subscribers", () => {
     it("On save/update", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -1260,7 +1260,7 @@ describe("Runs entity subscribers", () => {
             public prop: number = 10;
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number = 1;
@@ -1322,7 +1322,7 @@ describe("Runs entity subscribers", () => {
     });
 
     it("Doesn't call beforeSave/afterSave subscribers for non cascade deep relations", async () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -1331,7 +1331,7 @@ describe("Runs entity subscribers", () => {
             public prop: number = 10;
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number = 1;
@@ -1360,7 +1360,7 @@ describe("Runs entity subscribers", () => {
 
     describe("On delete", () => {
         it("Calls beforeRemove/afterRemove methods for entity", async () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -1380,7 +1380,7 @@ describe("Runs entity subscribers", () => {
         });
 
         it("Doesn't call for any relations", async () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1392,7 +1392,7 @@ describe("Runs entity subscribers", () => {
             rel2.id = 2;
             rel3.id = 3;
 
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -1422,7 +1422,7 @@ describe("Runs entity subscribers", () => {
 
     describe("On load", () => {
         it("Calls entity subscriber for entity", async () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number;
@@ -1445,12 +1445,12 @@ describe("Runs entity subscribers", () => {
         });
 
         it("Calls entity subscriber for relations first", async () => {
-            @Hash()
+            @Entity()
             class InnerRel {
                 @IdentifyProperty()
                 public id: number;
             }
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1458,7 +1458,7 @@ describe("Runs entity subscribers", () => {
                 @RelationProperty(type => InnerRel, { cascadeInsert: true })
                 public innerRel: InnerRel;
             }
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number;

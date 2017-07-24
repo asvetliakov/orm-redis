@@ -1,7 +1,7 @@
 /**
  * Metadata key to mark class to be stored as redis hash
  */
-export const REDIS_HASH = Symbol("Redis Hash");
+export const REDIS_ENTITY = Symbol("Redis Hash");
 
 /**
  * Metadata key to store redis properties metadatas
@@ -107,50 +107,50 @@ export interface RelationPropertyMetadata {
 }
 
 /**
- * Return true if given object is redis hash like
+ * Return true if given object is redis entity like
  * 
  * @export
- * @param hash 
+ * @param entity 
  * @returns 
  */
-export function isRedisHash(hash: object): boolean {
-    if (typeof hash !== "object" || hash === null) {
+export function isRedisEntity(entity: object): boolean {
+    if (typeof entity !== "object" || entity === null) {
         return false;
     }
-    const metadata = Reflect.getMetadata(REDIS_HASH, hash.constructor);
+    const metadata = Reflect.getMetadata(REDIS_ENTITY, entity.constructor);
     return !!metadata;
 }
 
 /**
- * Return redis hash name
+ * Return entity name
  * 
  * @export
- * @param hashOrHashClass 
+ * @param entityOrEntityClass 
  * @returns 
  */
-export function getRedisHashName(hashOrHashClass: object | Function): string | undefined {
-    const metadata = Reflect.getMetadata(REDIS_HASH, typeof hashOrHashClass === "function" ? hashOrHashClass : hashOrHashClass.constructor);
+export function getEntityName(entityOrEntityClass: object | Function): string | undefined {
+    const metadata = Reflect.getMetadata(REDIS_ENTITY, typeof entityOrEntityClass === "function" ? entityOrEntityClass : entityOrEntityClass.constructor);
     return metadata;
 }
 
 /**
- * Return redis hash id
+ * Return entity id
  * 
  * @export
- * @param hash 
+ * @param entity 
  * @returns 
  */
-export function getRedisHashId(hash: { [key: string]: any }): string | number | undefined {
-    if (!isRedisHash(hash)) {
+export function getEntityId(entity: { [key: string]: any }): string | number | undefined {
+    if (!isRedisEntity(entity)) {
         return undefined;
     }
-    const metadatas: PropertyMetadata[]  = Reflect.getMetadata(REDIS_PROPERTIES, hash.constructor);
+    const metadatas: PropertyMetadata[]  = Reflect.getMetadata(REDIS_PROPERTIES, entity.constructor);
     const idMetadata = metadatas && metadatas.find(val => !val.isRelation && val.isIdentifyColumn);
     if (!idMetadata) {
         return undefined;
     }
-    if (typeof hash[idMetadata.propertyName] === "number" || typeof hash[idMetadata.propertyName] === "string") {
-        return hash[idMetadata.propertyName];
+    if (typeof entity[idMetadata.propertyName] === "number" || typeof entity[idMetadata.propertyName] === "string") {
+        return entity[idMetadata.propertyName];
     }
     return undefined;
 }
@@ -159,27 +159,27 @@ export function getRedisHashId(hash: { [key: string]: any }): string | number | 
  * Returns redis properties metadata
  * 
  * @export
- * @param hashOrHashClass 
+ * @param entityOrEntityClass 
  * @returns 
  */
-export function getRedisHashProperties(hashOrHashClass: object | Function): PropertyMetadata[] | undefined {
-    return Reflect.getMetadata(REDIS_PROPERTIES, typeof hashOrHashClass === "function" ? hashOrHashClass : hashOrHashClass.constructor);
+export function getEntityProperties(entityOrEntityClass: object | Function): PropertyMetadata[] | undefined {
+    return Reflect.getMetadata(REDIS_PROPERTIES, typeof entityOrEntityClass === "function" ? entityOrEntityClass : entityOrEntityClass.constructor);
 }
 
 /**
  * Return full hash id
  * 
  * @export
- * @param hashOrHashClass 
+ * @param entityOrEntityClass 
  * @param [hashId]
  * @returns 
  */
-export function getRedisHashFullId(hashOrHashClass: object | Function, hashId?: string | number): string | undefined {
-    const name = getRedisHashName(hashOrHashClass);
+export function getEntityFullId(entityOrEntityClass: object | Function, hashId?: string | number): string | undefined {
+    const name = getEntityName(entityOrEntityClass);
     const id = typeof hashId !== "undefined"
         ? hashId
-        : typeof hashOrHashClass === "object"
-            ? getRedisHashId(hashOrHashClass)
+        : typeof entityOrEntityClass === "object"
+            ? getEntityId(entityOrEntityClass)
             : undefined;        
     if (name && typeof id !== "undefined") {
         return `e:${name}:${id}`;

@@ -1,6 +1,6 @@
 import { PropertyMetadata, REDIS_PROPERTIES, RelationPropertyMetadata } from "../../Metadata/Metadata";
 import { ShouldThrowError } from "../../testutils/ShouldThrowError";
-import { Hash } from "../Hash";
+import { Entity } from "../Entity";
 import { RelationProperty } from "../RelationProperty";
 
 it("Throws error if relation type is not specified", () => {
@@ -39,11 +39,11 @@ it("Throws if relation doesn't contain RedisHash decorator", () => {
 });
 
 describe("Defines metadata", () => {
-    @Hash()
+    @Entity()
     class Rel { }
     
     it("With default values", () => {
-        @Hash()
+        @Entity()
         class C {
             @RelationProperty(() => Rel)
             public test: Rel;
@@ -56,7 +56,7 @@ describe("Defines metadata", () => {
     });
     
     it("With relation options", () => {
-        @Hash()
+        @Entity()
         class C {
             @RelationProperty(type => Rel, { cascadeUpdate: true, propertyName: "testName" })
             public test: Rel;
@@ -66,7 +66,7 @@ describe("Defines metadata", () => {
     });
 
     it("With explicitly specified property type", () => {
-        @Hash()
+        @Entity()
         class C {
             @RelationProperty(() => [Rel, Rel])
             public test: Rel;
@@ -78,7 +78,7 @@ describe("Defines metadata", () => {
     });
 
     it("For set or map of relations", () => {
-        @Hash()
+        @Entity()
         class C {
             @RelationProperty(() => [Rel, Set])
             public test: Set<Rel>;

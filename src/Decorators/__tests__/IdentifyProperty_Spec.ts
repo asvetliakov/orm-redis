@@ -1,15 +1,15 @@
 import { REDIS_PROPERTIES } from "../../Metadata/Metadata";
 import { ShouldThrowError } from "../../testutils/ShouldThrowError";
-import { Hash } from "../Hash";
+import { Entity } from "../Entity";
 import { IdentifyProperty } from "../IdentifyProperty";
 
-@Hash()
+@Entity()
 class Test {
     @IdentifyProperty(String)
     public id: string;
 }
 
-@Hash()
+@Entity()
 class Test2 {
     @IdentifyProperty("somename")
     public id: number;

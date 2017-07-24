@@ -1,5 +1,5 @@
 import { Connection } from "../Connection/Connection";
-import { getRedisHashFullId, getRedisHashProperties, isRedisHash } from "../Metadata/Metadata";
+import { getEntityFullId, getEntityProperties, isRedisEntity } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
 import { HydrationData, LoadOperation, Operator, PersistenceOperation } from "./Operator";
 
@@ -246,7 +246,7 @@ export class RedisManager {
                 executor.del(deleteHash);
             }
         });
-        this.operator.resetMetadataInHash(entity);
+        this.operator.resetMetadataInEntityObject(entity);
         if (subscriber && subscriber.afterRemove) {
             subscriber.afterRemove(entity);
         }
@@ -263,11 +263,11 @@ export class RedisManager {
      * @returns 
      */
     private getEntitiesForSubscribers(entity: { [key: string]: any }, entities: object[] = []): object[] {
-        if (!isRedisHash(entity) || entities.includes(entity)) {
+        if (!isRedisEntity(entity) || entities.includes(entity)) {
             return entities;
         }
         entities.push(entity);
-        const metadata = getRedisHashProperties(entity); 
+        const metadata = getEntityProperties(entity); 
         if (!metadata) {
             return entities;
         }
@@ -302,7 +302,7 @@ export class RedisManager {
      */
     private filterEntitiesForPersistenceOperation(entities: object[], operation: PersistenceOperation): object[] {
         return entities.filter(entity => {
-            const hashId = getRedisHashFullId(entity);
+            const hashId = getEntityFullId(entity);
             if (!hashId) {
                 return false;
             }

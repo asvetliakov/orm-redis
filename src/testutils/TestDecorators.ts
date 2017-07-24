@@ -1,13 +1,13 @@
-import { getRedisHashId, getRedisHashName, isRedisHash, REDIS_COLLECTION_VALUE, REDIS_VALUE } from "../Metadata/Metadata";
+import { getEntityId, getEntityName, isRedisEntity, REDIS_COLLECTION_VALUE, REDIS_VALUE } from "../Metadata/Metadata";
 
 function prepareValue(value: any, target: any, propertyKey: string): string | undefined {
-    if (isRedisHash(value)) {
-        const hashId = getRedisHashId(value);
-        const hashName = getRedisHashName(value);
+    if (isRedisEntity(value)) {
+        const hashId = getEntityId(value);
+        const hashName = getEntityName(value);
         return `e:${hashName}:${hashId}`;
     } else {
-        const hashId = getRedisHashId(target);
-        const hashName = getRedisHashName(target);
+        const hashId = getEntityId(target);
+        const hashName = getEntityName(target);
         if (value instanceof Map) {
             return `m:e:${hashName}:${hashId}:${propertyKey}`;
         } else if (value instanceof Set) {

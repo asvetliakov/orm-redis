@@ -1,4 +1,4 @@
-import { Hash } from "../../Decorators/Hash";
+import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
 import { RelationProperty } from "../../Decorators/RelationProperty";
@@ -32,7 +32,7 @@ describe("Save/Delete/Update", () => {
     });
 
     it("Throws error if class doesn't contain any @Property decorator", () => {
-        @Hash()
+        @Entity()
         class A { }
 
         try {
@@ -50,7 +50,7 @@ describe("Save/Delete/Update", () => {
     });
 
     it("Throws error if class doesn't contain @IdentifyProperty decorator", () => {
-        @Hash()
+        @Entity()
         class A {
             @Property(Number)
             public prop: number;
@@ -70,7 +70,7 @@ describe("Save/Delete/Update", () => {
     });
 
     it("Throws error if @IdentifyProperty is not a number or string", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty(Number)
             public prop: number; // undefined
@@ -105,7 +105,7 @@ describe("Save/Delete/Update", () => {
     });
 
     it("Process simple properties", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty("identify")
             public id: number = 1;
@@ -166,7 +166,7 @@ describe("Save/Delete/Update", () => {
                 super(...args);
             }
         }
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -210,7 +210,7 @@ describe("Save/Delete/Update", () => {
     });
 
     it("Simple values and updating/deleting over existing redis value", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             @TestRedisInitialValue()
@@ -286,7 +286,7 @@ describe("Save/Delete/Update", () => {
     });
 
     describe("Simple map and sets changing and updating", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty(Number)
             @TestRedisInitialValue()
@@ -374,7 +374,7 @@ describe("Save/Delete/Update", () => {
 
 
     describe("Single relation", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number = 1;
@@ -383,7 +383,7 @@ describe("Save/Delete/Update", () => {
             public relTest: string = "test";
         }
         it("Saves new relation without cascade inserting", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -397,7 +397,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Saves new relation with cascade inserting", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -412,7 +412,7 @@ describe("Save/Delete/Update", () => {
 
         it("Saves new relation over previous relation without cascade inserting", () => {
             const rel = new Rel();
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -430,7 +430,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Throws if relation is invalid", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -439,7 +439,7 @@ describe("Save/Delete/Update", () => {
                 public rel: Rel;
             }
             class B { }
-            @Hash()
+            @Entity()
             class C { 
                 @Property()
                 public prop: string = "";
@@ -471,7 +471,7 @@ describe("Save/Delete/Update", () => {
 
         it("Saves new relation over previous relation with cascade inserting", () => {
             const rel = new Rel();
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -490,7 +490,7 @@ describe("Save/Delete/Update", () => {
 
         it("Change in relation without cascade update", () => {
             const rel = new Rel();
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -508,7 +508,7 @@ describe("Save/Delete/Update", () => {
 
         it("Change in relation with cascade update", () => {
             const rel = new Rel();
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -525,7 +525,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Set relation to null", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -542,7 +542,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Set relation to undefined", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -559,7 +559,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Set relation from null to undefined", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -576,7 +576,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Update relation without cascadeUpdate", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -595,7 +595,7 @@ describe("Save/Delete/Update", () => {
         it("Update relation with cascadeUpdate", () => {
             const rel = new Rel();
             TestRedisInitialValue(1)(rel, "id");
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -614,7 +614,7 @@ describe("Save/Delete/Update", () => {
         it("Delete with relation doesn't delete relation itself", () => {
             const rel = new Rel();
             TestRedisInitialValue(1)(rel, "id");
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -630,7 +630,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Prevents circular references when inserting", () => {
-            @Hash()
+            @Entity()
             class A { 
                 @IdentifyProperty()
                 public id: number = 1;
@@ -638,7 +638,7 @@ describe("Save/Delete/Update", () => {
                 public bTest: B;
             }
 
-            @Hash()
+            @Entity()
             class B {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -659,7 +659,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Prevents circular references when updating", () => {
-            @Hash()
+            @Entity()
             class A { 
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -668,7 +668,7 @@ describe("Save/Delete/Update", () => {
                 public bTest: B;
             }
 
-            @Hash()
+            @Entity()
             class B {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -698,7 +698,7 @@ describe("Save/Delete/Update", () => {
         });
 
         describe("Complex and nested relations and cascade ops", () => {
-            @Hash()
+            @Entity()
             class AnotherRel {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -707,7 +707,7 @@ describe("Save/Delete/Update", () => {
                 public text: string = "another rel";
             }
 
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -722,7 +722,7 @@ describe("Save/Delete/Update", () => {
                 public anotherRel: AnotherRel = new AnotherRel();
             }
 
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -797,7 +797,7 @@ describe("Save/Delete/Update", () => {
 
     describe("Multiple relations in sets", () => {
         it("Save hash with relation in sets without cascade insert", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -806,7 +806,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -831,7 +831,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Save hash with relation in sets with cascade insert", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -840,7 +840,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -865,7 +865,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Save nested relations in sets with cascade insert", () => {
-            @Hash()
+            @Entity()
             class AnotherRel {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -874,7 +874,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string = "another rel";
             }
             const anotherRel = new AnotherRel();
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -886,7 +886,7 @@ describe("Save/Delete/Update", () => {
                 public insideRel: AnotherRel = anotherRel;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -911,14 +911,14 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Save cyclic relations with cascade insert", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
 
                 public bSet: Set<B>;
             }
-            @Hash()
+            @Entity()
             class B { 
                 @IdentifyProperty()
                 public id: number = 1;
@@ -936,7 +936,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Tracks deletion/addition of relations in set", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -951,7 +951,7 @@ describe("Save/Delete/Update", () => {
             rel2.id = 2;
             rel2.prop = "rel2";
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -979,7 +979,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Tracks changes in relations with cascadeUpdate", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -999,7 +999,7 @@ describe("Save/Delete/Update", () => {
             TestRedisInitialValue(2)(rel2, "id");
             TestRedisInitialValue("rel2")(rel2, "prop");
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1021,7 +1021,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Works when replacing relation set with new object", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1037,7 +1037,7 @@ describe("Save/Delete/Update", () => {
             rel2.id = 2;
             rel2.prop = "rel2";
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1054,7 +1054,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Throws error if there are objects with same id but have different object links in relation set", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1063,7 +1063,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -1091,7 +1091,7 @@ describe("Save/Delete/Update", () => {
         });
 
         describe("Has different objects with same id in deep relation", () => {
-            @Hash()
+            @Entity()
             class AnotherRel {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -1099,7 +1099,7 @@ describe("Save/Delete/Update", () => {
                 @Property()
                 public prop: string = "another rel";
             }
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1113,7 +1113,7 @@ describe("Save/Delete/Update", () => {
 
             let e: any;
             beforeEach(() => {
-                @Hash()
+                @Entity()
                 class E {
                     @IdentifyProperty()
                     public id: number;
@@ -1151,7 +1151,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Deletes relation sets but not relation itself", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1162,7 +1162,7 @@ describe("Save/Delete/Update", () => {
             rel1.id = 1;
             const rel2 = new Rel();
             rel2.id = 2;
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1179,7 +1179,7 @@ describe("Save/Delete/Update", () => {
 
     describe("Multiple relations in maps", () => {
         it("Save hash with relation in maps without cascade insert", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1188,7 +1188,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -1213,7 +1213,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Save hash with relation in maps with cascade insert", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1222,7 +1222,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -1247,7 +1247,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Allows multiple keys to same relation object", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1256,7 +1256,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -1284,7 +1284,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Save nested relations in maps with cascade insert", () => {
-            @Hash()
+            @Entity()
             class AnotherRel {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -1293,7 +1293,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string = "another rel";
             }
             const anotherRel = new AnotherRel();
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1305,7 +1305,7 @@ describe("Save/Delete/Update", () => {
                 public insideRel: AnotherRel = anotherRel;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -1330,14 +1330,14 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Save cyclic relations with cascade insert", () => {
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 public id: number = 1;
 
                 public bMap: Map<number, B>;
             }
-            @Hash()
+            @Entity()
             class B { 
                 @IdentifyProperty()
                 public id: number = 1;
@@ -1355,7 +1355,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Tracks deletion/addition of relations in relation map", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1370,7 +1370,7 @@ describe("Save/Delete/Update", () => {
             rel2.id = 2;
             rel2.prop = "rel2";
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty(Number)
                 @TestRedisInitialValue()
@@ -1395,7 +1395,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Tracks changes in relations with cascadeUpdate", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1416,7 +1416,7 @@ describe("Save/Delete/Update", () => {
             TestRedisInitialValue(2)(rel2, "id");
             TestRedisInitialValue("rel2")(rel2, "prop");
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1435,7 +1435,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Works when replacing relation map with new object", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1450,7 +1450,7 @@ describe("Save/Delete/Update", () => {
             rel2.id = 2;
             rel2.prop = "rel2";
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1471,7 +1471,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Throws error if there are objects with same id but have different object links in relation map", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1480,7 +1480,7 @@ describe("Save/Delete/Update", () => {
                 public prop: string;
             }
 
-            @Hash()
+            @Entity()
             class E {
                 @IdentifyProperty()
                 public id: number;
@@ -1508,7 +1508,7 @@ describe("Save/Delete/Update", () => {
         });
 
         describe("Has different objects with same id in deep relation", () => {
-            @Hash()
+            @Entity()
             class AnotherRel {
                 @IdentifyProperty()
                 public id: number = 1;
@@ -1516,7 +1516,7 @@ describe("Save/Delete/Update", () => {
                 @Property()
                 public prop: string = "another rel";
             }
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 public id: number;
@@ -1530,7 +1530,7 @@ describe("Save/Delete/Update", () => {
 
             let e: any;
             beforeEach(() => {
-                @Hash()
+                @Entity()
                 class E {
                     @IdentifyProperty()
                     public id: number;
@@ -1568,7 +1568,7 @@ describe("Save/Delete/Update", () => {
         });
 
         it("Deletes relation maps but not relation itself", () => {
-            @Hash()
+            @Entity()
             class Rel {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1579,7 +1579,7 @@ describe("Save/Delete/Update", () => {
             rel1.id = 1;
             const rel2 = new Rel();
             rel2.id = 2;
-            @Hash()
+            @Entity()
             class A {
                 @IdentifyProperty()
                 @TestRedisInitialValue()
@@ -1622,7 +1622,7 @@ describe("Load", () => {
             expect(e).toBeInstanceOf(MetadataError);
         }
 
-        @Hash()
+        @Entity()
         class B { }
         try {
             operator.getLoadOperation("test", B);
@@ -1631,7 +1631,7 @@ describe("Load", () => {
             expect(e).toBeInstanceOf(MetadataError);
         }
 
-        @Hash()
+        @Entity()
         class C {
             @Property(Number)
             public prop: number;
@@ -1645,7 +1645,7 @@ describe("Load", () => {
     });
 
     it("Return load operation for simple hash", () => {
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty(Number)
             public id: number;
@@ -1659,7 +1659,7 @@ describe("Load", () => {
     });
 
     it("Return load operation for hash with non relation sets or maps", () => {
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty(Number)
             public id: number;
@@ -1676,12 +1676,12 @@ describe("Load", () => {
     });
 
     it("Return load operation for hash with relation sets or maps", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty(Number)
             public id: number;
         }
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty(Number)
             public id: number;
@@ -1698,12 +1698,12 @@ describe("Load", () => {
     });
 
     it("Return load operation for map/sets with specified redis name", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty(Number)
             public id: number;
         }
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty(Number)
             public id: number;
@@ -1725,12 +1725,12 @@ describe("Load", () => {
     });
 
     it("Return load operation with skipped relation maps/sets", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty()
             public id: number;
@@ -1759,7 +1759,7 @@ describe("Load", () => {
     });
 
     it("Loads hash by full hash id", () => {
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty(Number)
             public id: number;
@@ -1776,7 +1776,7 @@ describe("Load", () => {
     });
 
     it("Returns undefined operation if pass 'null' as id", () => {
-        @Hash()
+        @Entity()
         class E {
             @IdentifyProperty(Number)
             public id: number;
@@ -1817,7 +1817,7 @@ describe("Update metadata", () => {
             expect(e).toBeInstanceOf(MetadataError);
         }
 
-        @Hash()
+        @Entity()
         class B { }
         try {
             operator.updateMetadataInHash(B);
@@ -1826,7 +1826,7 @@ describe("Update metadata", () => {
             expect(e).toBeInstanceOf(MetadataError);
         }
 
-        @Hash()
+        @Entity()
         class C {
             @Property(Number)
             public prop: number;
@@ -1840,7 +1840,7 @@ describe("Update metadata", () => {
     });
 
     it("Sets metadata for simple properties", () => {
-        @Hash()
+        @Entity()
         class MetadataUpdate {
             @IdentifyProperty()
             public id: number = 1;
@@ -1895,7 +1895,7 @@ describe("Update metadata", () => {
     });
 
     it("Updates metadata for non relation sets and maps", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -1954,13 +1954,13 @@ describe("Update metadata", () => {
     });
 
     it("Sets metadata for single relation property", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number = 1;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -1977,13 +1977,13 @@ describe("Update metadata", () => {
     });
 
     it("Sets metadata in single relations hashes when cascadeInsert/cascadeUpdate is true", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -2012,14 +2012,14 @@ describe("Update metadata", () => {
     });
 
     it("Sets metadata for relation map/sets", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number = 1;
         }
         const rel = new Rel();
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -2041,13 +2041,13 @@ describe("Update metadata", () => {
     });
 
     it("Sets metadata for relation hashes inside relation maps/sets when cascading", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number = 1;
@@ -2081,7 +2081,7 @@ describe("Update metadata", () => {
     });
 
     it("Deletes previous metadata for undefined values", () => {
-        @Hash()
+        @Entity()
         class A { 
             @IdentifyProperty()
             @TestRedisInitialValue(1)
@@ -2113,7 +2113,7 @@ describe("Update metadata", () => {
 
 describe("Reset metadata", () => {
     it("Resets metadata in hashes", () => {
-        @Hash()
+        @Entity()
         class A { 
             @IdentifyProperty()
             @TestRedisInitialValue()
@@ -2133,7 +2133,7 @@ describe("Reset metadata", () => {
         }
 
         const a = new A();
-        operator.resetMetadataInHash(a);
+        operator.resetMetadataInEntityObject(a);
         expect(Reflect.getMetadata(REDIS_VALUE, a, "id")).toBeUndefined();
         expect(Reflect.getMetadata(REDIS_VALUE, a, "prop1")).toBeUndefined();
         expect(Reflect.getMetadata(REDIS_VALUE, a, "set1")).toBeUndefined();
@@ -2146,7 +2146,7 @@ describe("Reset metadata", () => {
 
 describe("hydrateData", () => {
     it("Doesn't hydrate null or undefined values", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -2163,7 +2163,7 @@ describe("hydrateData", () => {
     });
 
     it("Hydrates simple entity", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -2190,7 +2190,7 @@ describe("hydrateData", () => {
             public prop7: string;
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: string;
@@ -2270,7 +2270,7 @@ describe("hydrateData", () => {
     });
 
     it("Hydrates entity with non relation maps and sets", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -2319,7 +2319,7 @@ describe("hydrateData", () => {
     });
 
     it("Hydrates entity with single relation", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -2328,7 +2328,7 @@ describe("hydrateData", () => {
             public aProp: string;
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number;
@@ -2340,7 +2340,7 @@ describe("hydrateData", () => {
             public aRel: A;
         }
 
-        @Hash()
+        @Entity()
         class C {
             @IdentifyProperty()
             public id: number;
@@ -2414,7 +2414,7 @@ describe("hydrateData", () => {
     });
 
     it("Hydrates circular relations", () => {
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
@@ -2422,7 +2422,7 @@ describe("hydrateData", () => {
             public b: B;
         }
 
-        @Hash()
+        @Entity()
         class B {
             @IdentifyProperty()
             public id: number;
@@ -2474,13 +2474,13 @@ describe("hydrateData", () => {
     });
 
     it("Hydrates sets and maps with relations", () => {
-        @Hash()
+        @Entity()
         class Rel {
             @IdentifyProperty()
             public id: number;
         }
 
-        @Hash()
+        @Entity()
         class A {
             @IdentifyProperty()
             public id: number;
