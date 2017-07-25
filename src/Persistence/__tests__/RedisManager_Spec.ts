@@ -460,13 +460,14 @@ describe("Save", () => {
         await manager.save(a);
         const res = await Promise.all([
             conn.client.hgetallAsync("e:A:1"),
-            conn.client.smembersAsync("a:e:A:1:mySet"),
             conn.client.hgetallAsync("m:e:A:1:myMap"),
             conn.client.hgetallAsync("e:Rel:1"),
             conn.client.hgetallAsync("e:Rel:2"),
             conn.client.hgetallAsync("e:Rel:3"),
             conn.client.hgetallAsync("e:Rel:4"),
         ]);
+        const set = await conn.client.smembersAsync("a:e:A:1:mySet");
+        expect(set).toEqual(expect.arrayContaining(["e:Rel:1", "e:Rel:2"]));
         expect(res).toMatchSnapshot();
     });
 

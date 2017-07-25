@@ -117,10 +117,6 @@ Array [
     "myMap": "m:e:A:1:myMap",
     "mySet": "a:e:A:1:mySet",
   },
-  Array [
-    "e:Rel:2",
-    "e:Rel:1",
-  ],
   Object {
     "i:1": "e:Rel:3",
     "i:2": "e:Rel:4",
