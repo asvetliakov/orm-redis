@@ -1,5 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Load Doesn't load lazy sets or maps 1`] = `
+Object {
+  "entityId": "e:E:1",
+  "hashes": Array [],
+  "relationMappings": Array [],
+  "sets": Array [],
+}
+`;
+
+exports[`Load Doesn't load lazy sets or maps 2`] = `
+Object {
+  "entityId": "e:A:1",
+  "hashes": Array [],
+  "relationMappings": Array [],
+  "sets": Array [],
+}
+`;
+
 exports[`Load Loads hash by full hash id 1`] = `
 Object {
   "entityId": "e:E:1",
@@ -855,6 +873,159 @@ Object {
   ],
   "modifyHashes": Array [],
   "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Returns delete operation for entity with lazy sets/maps 1`] = `
+Object {
+  "deleteHashes": Array [
+    "e:A:1",
+    "m:e:A:1:map",
+  ],
+  "deletesSets": Array [
+    "a:e:A:1:set",
+  ],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Returns delete operation for entity with lazy sets/maps 2`] = `
+Object {
+  "deleteHashes": Array [
+    "e:B:1",
+    "m:e:B:1:map",
+  ],
+  "deletesSets": Array [
+    "a:e:B:1:set",
+  ],
+  "modifyHashes": Array [],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Save operation with lazy maps/sets Doesn't push any operations for wrapped redis maps and sets 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+  ],
+  "modifySets": Array [],
+}
+`;
+
+exports[`Save/Delete/Update Save operation with lazy maps/sets Treats lazy maps and sets as ordinary maps and sets for first save operation 1`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:A:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "i:1",
+        "i:2": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "m:e:A:1:map",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "i:1",
+        "i:2",
+        "i:3",
+      ],
+      "removeValues": Array [],
+      "setName": "a:e:A:1:set",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Save operation with lazy maps/sets Treats lazy maps and sets as ordinary maps and sets for first save operation 2`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:B:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "i:2": "e:Rel:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "m:e:B:1:map",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:Rel:1",
+      ],
+      "removeValues": Array [],
+      "setName": "a:e:B:1:set",
+    },
+  ],
+}
+`;
+
+exports[`Save/Delete/Update Save operation with lazy maps/sets Treats lazy maps and sets as ordinary maps and sets for first save operation 3`] = `
+Object {
+  "deleteHashes": Array [],
+  "deletesSets": Array [],
+  "modifyHashes": Array [
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:C:1",
+    },
+    Object {
+      "changeKeys": Object {
+        "i:1": "e:Rel:1",
+        "i:2": "e:Rel:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "m:e:C:1:map",
+    },
+    Object {
+      "changeKeys": Object {
+        "id": "i:1",
+      },
+      "deleteKeys": Array [],
+      "hashId": "e:Rel:1",
+    },
+  ],
+  "modifySets": Array [
+    Object {
+      "addValues": Array [
+        "e:Rel:1",
+      ],
+      "removeValues": Array [],
+      "setName": "a:e:C:1:set",
+    },
+  ],
 }
 `;
 

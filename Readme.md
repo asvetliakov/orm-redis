@@ -10,13 +10,14 @@
 * Relations cascade inserting/updating (But not deleting)
 * Entity subscriber support & built-in pubsub subscriber
 * Operation optimized - writes to redis only changed values
+* Lazy maps/sets support
 * Optimistic locking (WIP)
-* Lazy properties/maps/sets support (WIP)
 
 ## Requirments
 
 * TypeScript 2.3 or greater
 * Node 7.*
+* Symbol.asyncIterator polyfill to iterate over lazy maps/sets
 
 ## Setup
 
@@ -29,6 +30,11 @@ npm install reflect-metadata --save
 
 // in index.ts
 import "reflect-metadata";
+```
+
+If you're going to use lazy maps/sets then you need ```Symbol.asyncIterator``` polyfill. This can be easily achived by writing this somewhere in app:
+```ts
+(Symbol as any).asyncIterator = (Symbol as any).asyncIterator || Symbol.for("Symbol.asyncIterator");
 ```
 
 ## Examples
@@ -177,6 +183,91 @@ ORM supports both single relations (linked to a single property) and multiple re
     await manager.delete(owner);
 ```
 
+### Lazy collections
+
+By default all sets/maps are being loaded eagerly. If your map/set in redis is very big, it can take some time to load, especially for relation sets/maps.
+You can use lazy sets/maps in this case:
+
+```ts
+    import { LazySet, LazyMap } from "orm-redis";
+
+    @Entity()
+    class Ent {
+        @IdentifyProperty()
+        public id: number;
+
+        @Property()    
+        public set: LazySet<any> = new LazySet();
+
+        @Property()
+        public map: LazyMap<any, any> = new LazyMap()
+    }
+
+    const ent = new Ent();
+    ent.id = 1;
+    // Won't be saved until calling manager.save() for new entities
+    await ent.set.add(1);
+    await ent.map.set(1, true);
+
+    await manager.save(ent);
+
+    // Immediately saved to set in redis now
+    await ent.set.add(2);
+
+    // Use asyncronyous iterator available in TS 2.3+
+    for await (const v of ent.set) {
+        // do something with v
+    }
+    console.log(await ent.set.size()); // 2
+
+    const anotherEnt = await manager.load(Ent, 2);
+    for await (const [key, val] of anotherEnt.map) {
+        // [1, true]
+    }
+
+    @Entity()
+    class Rel {
+        @IdentifyProperty()
+        public id: number;
+    }
+
+    @Entity()
+    class AnotherEnt {
+        @IdentifyProperty()
+        public id: number;
+
+        @RelationProperty(type => [Rel, LazyMap], { cascadeInsert: true }) // same rules as for ordinary relation map/set for cascading ops
+        public map: LazyMap<number, Rel> = new LazyMap()
+    }
+
+    const rel = new Rel();
+    rel.id = 1;
+    const anotherEnt = new AnotherEnt();
+    anotherEnt.id = 1;
+    anotherEnt.map.set(1, rel);
+
+    await manager.save(anotherEnt);
+
+    const savedEnt = await manager.load(AnotherEnt, 1);
+    await savedEnt.map.get(1); // Rel { id: 1 }
+```
+
+Asyncronyous iterators are using ```SCAN``` redis command so they suitable for iterating over big collections.
+
+LazyMap/LazySet after saving entity/loading entity are being converted to specialized RedisLazyMap/RedisLazySet.
+
+Also it's possible to use RedisLazyMap/RedisLazySet directly:
+
+```ts
+    const map = new RedisLazyMap(/* redis map id */"someMapId", /* redis manager */ connection.manager);
+    await map.set(1, true);
+    await map.set(2, false);
+
+    for await (const [key, val] of map) {
+        // [1, true], [2, false]
+    }
+
+```
 
 ### Subscribers
 

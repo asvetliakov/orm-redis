@@ -1,3 +1,7 @@
+import { LazyMap } from "../collections/LazyMap";
+import { LazySet } from "../collections/LazySet";
+import { RedisLazyMap } from "../collections/RedisLazyMap";
+import { RedisLazySet } from "../collections/RedisLazySet";
 import { DuplicateIdsInEntityError, MetadataError } from "../Errors/Errors";
 import { getEntityFullId, getEntityProperties, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_ENTITY, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";
@@ -139,7 +143,7 @@ export class Operator {
      * @param entity 
      * @returns 
      */
-    public getSaveOperation(entity: { [key: string]: any }, processedEntities: EntityWithId[] = []): PersistenceOperation {
+    public async getSaveOperation(entity: { [key: string]: any }, processedEntities: EntityWithId[] = []): Promise<PersistenceOperation> {
         this.checkMetadata(entity);
         const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, entity.constructor);
         const fullHashId = this.getFullIdForEntityObject(entity);
@@ -182,10 +186,13 @@ export class Operator {
             const value = entity[propMetadata.propertyName];
             const valueType = propMetadata.propertyType;
             // special case for Map/Set
-            if (hasPrototypeOf(valueType, Set) || hasPrototypeOf(valueType, Map)) {
+            if (hasPrototypeOf(valueType, Set) || hasPrototypeOf(valueType, Map) ||
+                hasPrototypeOf(valueType, LazySet) || hasPrototypeOf(valueType, LazyMap)
+            ) {
                 const redisInitialCollectionValue: undefined | string[] | { [key: string]: string } = Reflect.getMetadata(REDIS_COLLECTION_VALUE, entity, propMetadata.propertyName);
+                // LazyMaps and LazySets are not instances of Set/Maps so they won't be deleted
                 const deleted = !value || ((value instanceof Set || value instanceof Map) && value.size === 0);
-                const collectionId = this.prepareCollectionValue(fullHashId, propMetadata)!;
+                const collectionId = this.getCollectionId(fullHashId, propMetadata)!;
                 if (deleted) {
                     // Deleted or wasn't set
                     // 1. had val -> null. Delete map/set and set prop to "null"
@@ -335,15 +342,61 @@ export class Operator {
                     }
                     // Update/Insert relations if needed
                     if (propMetadata.isRelation && (propMetadata.relationOptions.cascadeInsert || propMetadata.relationOptions.cascadeUpdate)) {
-                        const relationOperations = [
+                        const relationOperations = await Promise.all([
                             ...propMetadata.relationOptions.cascadeInsert ? added.values() : [],
                             ...propMetadata.relationOptions.cascadeUpdate ? changed.values() : []
-                        ].map(entity => this.getSaveOperation(entity, processedEntities));
+                        ].map(entity => this.getSaveOperation(entity, processedEntities)));
                         for (const relOp of relationOperations) {
                             operation.deleteHashes.push(...relOp.deleteHashes);
                             operation.deletesSets.push(...relOp.deletesSets);
                             operation.modifyHashes.push(...relOp.modifyHashes);
                             operation.modifySets.push(...relOp.modifySets);
+                        }
+                    }
+                } else if ((value instanceof LazyMap || value instanceof LazySet)
+                    && !(value instanceof RedisLazyMap || value instanceof RedisLazySet) // don't process wrapped maps
+                ) {
+                    if (await value.size() > 0) {
+                        const collArray = await value.toArray();
+                        if (value instanceof LazySet) {
+                            const serializedValues = collArray
+                                .map(val => propMetadata.isRelation ? this.getFullIdForEntityObject(val) : this.serializeValue(val))
+                                .filter(val => typeof val !== "undefined") as string[];
+                            operation.modifySets.push({
+                                setName: collectionId,
+                                addValues: serializedValues,
+                                removeValues: []
+                            });
+                        } else if (value instanceof LazyMap) {
+                            const serializedParis = collArray
+                                .map(pair => {
+                                    const serializedKey = this.serializeValue(pair[0]);
+                                    const serializedValue = propMetadata.isRelation ? this.getFullIdForEntityObject(pair[1]) : this.serializeValue(pair[1]);
+                                    if (typeof serializedKey !== "undefined" && typeof serializedValue !== "undefined") {
+                                        return [serializedKey, serializedValue];
+                                    } else {
+                                        return undefined;
+                                    }
+                                }).filter(pair => typeof pair !== "undefined") as Array<[string, any]>;
+                            operation.modifyHashes.push({
+                                hashId: collectionId,
+                                deleteKeys: [],
+                                changeKeys: serializedParis.reduce((obj, [key, val]) => {
+                                    obj[key] = val;
+                                    return obj;
+                                }, {} as { [key: string]: string })
+                            });
+                        }
+                        if (propMetadata.isRelation && propMetadata.relationOptions.cascadeInsert) {
+                            const relationOperations = await Promise.all(collArray
+                                .filter(val => Array.isArray(val) ? typeof val[1] !== "undefined" : typeof val !== "undefined")
+                                .map(val => Array.isArray(val) ? this.getSaveOperation(val[1], processedEntities) : this.getSaveOperation(val, processedEntities)));
+                            for (const relOp of relationOperations) {
+                                operation.deleteHashes.push(...relOp.deleteHashes);
+                                operation.deletesSets.push(...relOp.deletesSets);
+                                operation.modifyHashes.push(...relOp.modifyHashes);
+                                operation.modifySets.push(...relOp.modifySets);
+                            }
                         }
                     }
                 }
@@ -394,7 +447,7 @@ export class Operator {
                             (preparedValue === initialPropertyRedisValue && propMetadata.relationOptions.cascadeUpdate) // case 5
                         ) {
                             if (propMetadata.relationOptions.cascadeInsert || propMetadata.relationOptions.cascadeUpdate) {
-                                const relationOperation = this.getSaveOperation(value, processedEntities);
+                                const relationOperation = await this.getSaveOperation(value, processedEntities);
                                 operation.deleteHashes.push(...relationOperation.deleteHashes);
                                 operation.deletesSets.push(...relationOperation.deletesSets);
                                 operation.modifyHashes.push(...relationOperation.modifyHashes);
@@ -477,13 +530,13 @@ export class Operator {
             // const initialRedisValue: string | undefined | "null" = Reflect.getMetadata(REDIS_VALUE, entityOrEntityClass, propMetadata.propertyName);
 
             // always try to delete maps/sets, there won't be error if there are not exist
-            if (hasPrototypeOf(valueType, Set)) {
+            if (hasPrototypeOf(valueType, Set) || hasPrototypeOf(valueType, LazySet)) {
                 // if (initialRedisValue && initialRedisValue !== "null") {
-                    operation.deletesSets.push(this.prepareCollectionValue(fullHashId, propMetadata)!);
+                operation.deletesSets.push(this.getCollectionId(fullHashId, propMetadata)!);
                 // }
-            } else if (hasPrototypeOf(valueType, Map)) {
+            } else if (hasPrototypeOf(valueType, Map) || hasPrototypeOf(valueType, LazyMap)) {
                 // if (initialRedisValue && initialRedisValue !== "null") {
-                    operation.deleteHashes.push(this.prepareCollectionValue(fullHashId, propMetadata)!);
+                operation.deleteHashes.push(this.getCollectionId(fullHashId, propMetadata)!);
                 // }
             }
             // else if (propMetadata.isRelation && propMetadata.relationOptions.cascadeDelete && value) {
@@ -522,7 +575,7 @@ export class Operator {
         for (const propMetadata of metadata) {
             const propType = propMetadata.propertyType;
             if (hasPrototypeOf(propType, Set)) {
-                const collId = this.prepareCollectionValue(fullHashId, propMetadata)!;
+                const collId = this.getCollectionId(fullHashId, propMetadata)!;
                 if (propMetadata.isRelation) {
                     if (!skipRelations.includes(propMetadata.propertyName)) {
                         operation.relationMappings.push({
@@ -537,7 +590,7 @@ export class Operator {
                     operation.sets.push(collId);
                 }
             } else if (hasPrototypeOf(propType, Map)) {
-                const collId = this.prepareCollectionValue(fullHashId, propMetadata)!;
+                const collId = this.getCollectionId(fullHashId, propMetadata)!;
                 if (propMetadata.isRelation) {
                     if (!skipRelations.includes(propMetadata.propertyName)) {
                         operation.relationMappings.push({
@@ -551,7 +604,7 @@ export class Operator {
                 } else {
                     operation.hashes.push(collId);
                 }
-            } else {
+            } else if (!hasPrototypeOf(propType, LazySet) && !hasPrototypeOf(propType, LazyMap)) {
                 if (propMetadata.isRelation && !skipRelations.includes(propMetadata.propertyName)) {
                     operation.relationMappings.push({
                         ownerId: fullHashId,
@@ -582,14 +635,20 @@ export class Operator {
 
         const metadatas: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, hashObject.constructor);
         for (const propMetadata of metadatas) {
-            if (hasPrototypeOf(propMetadata.propertyType, Set) || hasPrototypeOf(propMetadata.propertyType, Map)) {
+            if (hasPrototypeOf(propMetadata.propertyType, Set) || hasPrototypeOf(propMetadata.propertyType, Map) ||
+                hasPrototypeOf(propMetadata.propertyType, LazySet) || hasPrototypeOf(propMetadata.propertyType, LazyMap)
+            ) {
                 const collection = hashObject[propMetadata.propertyName] as Map<any, any> | Set<any> | null | undefined;
                 if (collection === null) {
                     // Null value for collection
                     Reflect.defineMetadata(REDIS_VALUE, this.serializeValue(null)!, hashObject, propMetadata.propertyName);
+                } else if (collection instanceof LazyMap || collection instanceof LazySet) {
+                    // LazySets/Maps don't have REDIS_COLLECTION_VALUE since we don't need to get coll differences for them
+                    const collectionId = this.getCollectionId(fullHashId, propMetadata);
+                    Reflect.defineMetadata(REDIS_VALUE, collectionId, hashObject, propMetadata.propertyName);
                 } else if ((collection instanceof Set || collection instanceof Map) && collection.size > 0) {
                     // Collection have both REDIS_VALUE and REDIS_COLLECTION_VALUE
-                    const collectionValueForProp = this.prepareCollectionValue(fullHashId, propMetadata);
+                    const collectionValueForProp = this.getCollectionId(fullHashId, propMetadata);
                     if (collection instanceof Set) {
                         Reflect.defineMetadata(REDIS_VALUE, collectionValueForProp, hashObject, propMetadata.propertyName);
                         const setValues = [...collection.values()].map(
@@ -822,6 +881,24 @@ export class Operator {
         }
         return undefined;
     }
+    
+    /**
+     * Get id for collection for property
+     * 
+     * @param entityId 
+     * @param propertyMetadata 
+     * @returns 
+     */
+    public getCollectionId(entityId: string, propertyMetadata: PropertyMetadata): string | undefined {
+        if (hasPrototypeOf(propertyMetadata.propertyType, Set) || hasPrototypeOf(propertyMetadata.propertyType, LazySet)) {
+            return `a:${entityId}:${propertyMetadata.propertyRedisName}`;
+        } else if (hasPrototypeOf(propertyMetadata.propertyType, Map) || hasPrototypeOf(propertyMetadata.propertyType, LazyMap)) {
+            return `m:${entityId}:${propertyMetadata.propertyRedisName}`;
+        } else {
+            return undefined;
+        }
+    }
+
 
     /**
      * Check metadata correctness
@@ -833,7 +910,7 @@ export class Operator {
         const entityType = typeof entity === "object" ? entity.constructor : entity;
         const hashName = Reflect.getMetadata(REDIS_ENTITY, entityType);
         if (!hashName) {
-            throw new MetadataError(entityType, "Class must be decorated with @Hash decorator");
+            throw new MetadataError(entityType, "Class must be decorated with @Entity decorator");
         }
         const metadatas: PropertyMetadata[] | undefined = Reflect.getMetadata(REDIS_PROPERTIES, entityType);
         if (!metadatas || metadatas.length === 0) {
@@ -862,6 +939,7 @@ export class Operator {
         }
         return hashId;
     }
+
 
     /**
      * Get full id for given hash class and id
@@ -898,16 +976,6 @@ export class Operator {
         }
     }
 
-
-    private prepareCollectionValue(hashId: string, propertyMetadata: PropertyMetadata): string | undefined {
-        if (hasPrototypeOf(propertyMetadata.propertyType, Set)) {
-            return `a:${hashId}:${propertyMetadata.propertyRedisName}`;
-        } else if (hasPrototypeOf(propertyMetadata.propertyType, Map)) {
-            return `m:${hashId}:${propertyMetadata.propertyRedisName}`;
-        } else {
-            return undefined;
-        }
-    }
 
     /**
      * Prepare relation value persisting. This will be just entity name

@@ -1,3 +1,5 @@
+import { LazyMap } from "../collections/LazyMap";
+import { LazySet } from "../collections/LazySet";
 import { PropertyMetadata, REDIS_PROPERTIES } from "../Metadata/Metadata";
 
 export type ValidType =
@@ -8,6 +10,8 @@ export type ValidType =
     typeof Array |
     typeof Date |
     typeof Map |
+    typeof LazyMap |
+    typeof LazySet |
     typeof Set;
 
 

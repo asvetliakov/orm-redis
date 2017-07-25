@@ -1,6 +1,12 @@
+import { LazyMap } from "../collections/LazyMap";
+import { LazySet } from "../collections/LazySet";
+import { RedisLazyMap } from "../collections/RedisLazyMap";
+import { RedisLazySet } from "../collections/RedisLazySet";
 import { Connection } from "../Connection/Connection";
+import { MetadataError } from "../Errors/Errors";
 import { getEntityFullId, getEntityProperties, isRedisEntity } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
+import { hasPrototypeOf } from "../utils/hasPrototypeOf";
 import { HydrationData, LoadOperation, Operator, PersistenceOperation } from "./Operator";
 
 export type EntityType<T> = { new(): T } | Function;
@@ -62,7 +68,7 @@ export class RedisManager {
             }
         }
 
-        const operation = this.operator.getSaveOperation(entity);
+        const operation = await this.operator.getSaveOperation(entity);
         if (this.isEmptyPersistenceOperation(operation)) {
             return;
         }
@@ -95,6 +101,7 @@ export class RedisManager {
         });
         // update metadata
         this.operator.updateMetadataInHash(entity);
+        this.initLazyCollections(entity);
         // Call entities subscribers
         for (const ent of this.filterEntitiesForPersistenceOperation(allEntities, operation)) {
             const subscriber = this.subscribers.find(subscriber => subscriber.listenTo() === ent.constructor);
@@ -198,7 +205,7 @@ export class RedisManager {
                             }
                         }
                         break;
-                    }    
+                    }
                 }
             }
             if (relationOperations.length > 0) {
@@ -207,6 +214,12 @@ export class RedisManager {
         };
         await recursiveLoadDataWithRelations(rootLoadOperations);
         const hydratedData = this.operator.hydrateData(loadedData);
+        // Init lazy collections
+        hydratedData.forEach(data => {
+            if (data && data.constructor && isRedisEntity(data)) {
+                this.initLazyCollections(data);
+            }
+        });
         // run subscribers in reverse order
         hydratedData.reduceRight((unusued, data) => {
             if (data && data.constructor) {
@@ -228,7 +241,7 @@ export class RedisManager {
      * @param entity 
      * @returns 
      */
-    public async remove(entity: object): Promise<void> { 
+    public async remove(entity: object): Promise<void> {
         const operation = this.operator.getDeleteOperation(entity);
         if (this.isEmptyPersistenceOperation(operation)) {
             return;
@@ -295,6 +308,53 @@ export class RedisManager {
      */
     public unserializeSimpleValue(value: string): any {
         return this.operator.unserializeValue(value);
+    }
+
+    /**
+     * Init lazy set and maps. This will replace LazySet/LazyMap instances with redis-backed analogs
+     * 
+     * @param entity 
+     */
+    public initLazyCollections(entity: { [key: string]: any }): void {
+        const id = getEntityFullId(entity);
+        if (!id) {
+            throw new MetadataError(entity.constructor, "Unable to get entity id");
+        }
+        const properties = getEntityProperties(entity);
+        if (!properties) {
+            throw new MetadataError(entity.constructor, "No any properties");
+        }
+        for (const prop of properties) {
+            if (hasPrototypeOf(prop.propertyType, LazyMap) && !(entity[prop.propertyName] instanceof RedisLazyMap)) {
+                const mapId = this.operator.getCollectionId(id, prop);
+                if (mapId) {
+                    entity[prop.propertyName] = new RedisLazyMap(
+                        mapId,
+                        this,
+                        prop.isRelation
+                            ? prop.relationType
+                            : undefined,
+                        prop.isRelation
+                            ? prop.relationOptions.cascadeInsert
+                            : false
+                    );
+                }
+            } else if (hasPrototypeOf(prop.propertyType, LazySet) && !(entity[prop.propertyName] instanceof RedisLazySet)) {
+                const setId = this.operator.getCollectionId(id, prop);
+                if (setId) {
+                    entity[prop.propertyName] = new RedisLazySet(
+                        setId,
+                        this,
+                        prop.isRelation
+                            ? prop.relationType
+                            : undefined,
+                        prop.isRelation
+                            ? prop.relationOptions.cascadeInsert
+                            : false
+                    );
+                }
+            }
+        }
     }
 
 

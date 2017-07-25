@@ -1,3 +1,7 @@
+import { LazyMap } from "../../collections/LazyMap";
+import { LazySet } from "../../collections/LazySet";
+import { RedisLazyMap } from "../../collections/RedisLazyMap";
+import { RedisLazySet } from "../../collections/RedisLazySet";
 import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
@@ -15,10 +19,10 @@ beforeEach(() => {
 });
 
 describe("Save/Delete/Update", () => {
-    it("Throws error if class is not decorated with @Hash", () => {
+    it("Throws error if class is not decorated with @Hash", async () => {
         class A { }
         try {
-            operator.getSaveOperation(new A());
+            await operator.getSaveOperation(new A());
             throw new ShouldThrowError();
         } catch (e) {
             expect(e).toBeInstanceOf(MetadataError);
@@ -31,12 +35,12 @@ describe("Save/Delete/Update", () => {
         }
     });
 
-    it("Throws error if class doesn't contain any @Property decorator", () => {
+    it("Throws error if class doesn't contain any @Property decorator", async () => {
         @Entity()
         class A { }
 
         try {
-            operator.getSaveOperation(new A());
+            await operator.getSaveOperation(new A());
             throw new ShouldThrowError();
         } catch (e) {
             expect(e).toBeInstanceOf(MetadataError);
@@ -49,14 +53,14 @@ describe("Save/Delete/Update", () => {
         }
     });
 
-    it("Throws error if class doesn't contain @IdentifyProperty decorator", () => {
+    it("Throws error if class doesn't contain @IdentifyProperty decorator", async () => {
         @Entity()
         class A {
             @Property(Number)
             public prop: number;
         }
         try {
-            operator.getSaveOperation(new A());
+            await operator.getSaveOperation(new A());
             throw new ShouldThrowError();
         } catch (e) {
             expect(e).toBeInstanceOf(MetadataError);
@@ -69,7 +73,7 @@ describe("Save/Delete/Update", () => {
         }
     });
 
-    it("Throws error if @IdentifyProperty is not a number or string", () => {
+    it("Throws error if @IdentifyProperty is not a number or string", async () => {
         @Entity()
         class A {
             @IdentifyProperty(Number)
@@ -77,14 +81,14 @@ describe("Save/Delete/Update", () => {
         }
         const a = new A();
         try {
-            operator.getSaveOperation(a);
+            await operator.getSaveOperation(a);
             throw new ShouldThrowError();
         } catch (e) {
             expect(e).toBeInstanceOf(MetadataError);
         }
         try {
             a.prop = new Date() as any;
-            operator.getSaveOperation(a);
+            await operator.getSaveOperation(a);
             throw new ShouldThrowError();
         } catch (e) {
             expect(e).toBeInstanceOf(MetadataError);
@@ -104,7 +108,7 @@ describe("Save/Delete/Update", () => {
         }
     });
 
-    it("Process simple properties", () => {
+    it("Process simple properties", async () => {
         @Entity()
         class A {
             @IdentifyProperty("identify")
@@ -148,14 +152,14 @@ describe("Save/Delete/Update", () => {
         }
 
         const a = new A();
-        let res = operator.getSaveOperation(a);
+        let res = await operator.getSaveOperation(a);
         expect(res).toMatchSnapshot();
 
         res = operator.getDeleteOperation(a);
         expect(res).toMatchSnapshot();
     });
 
-    it("Process Map and Sets in properties", () => {
+    it("Process Map and Sets in properties", async () => {
         class MyMap extends Map {
             public constructor(...args: any[]) {
                 super(...args);
@@ -205,14 +209,14 @@ describe("Save/Delete/Update", () => {
         }
 
         const a = new A();
-        const res = operator.getSaveOperation(a);
+        const res = await operator.getSaveOperation(a);
         expect(res).toMatchSnapshot();
 
         const deleteRes = operator.getDeleteOperation(a);
         expect(deleteRes).toMatchSnapshot();
     });
 
-    it("Simple values and updating/deleting over existing redis value", () => {
+    it("Simple values and updating/deleting over existing redis value", async () => {
         @Entity()
         class A {
             @IdentifyProperty()
@@ -284,7 +288,7 @@ describe("Save/Delete/Update", () => {
         (a.prop10 as any)[0] = "111";
         a.prop11 = { def: "def" };
 
-        const res = operator.getSaveOperation(a);
+        const res = await operator.getSaveOperation(a);
         expect(res).toMatchSnapshot();
     });
 
@@ -344,7 +348,7 @@ describe("Save/Delete/Update", () => {
             public mapEmptied: Map<any, any> = new Map<any, any>([["1", "1"]]);
         }
 
-        it("Changing", () => {
+        it("Changing", async () => {
             const a = new A();
             a.setModified.add(4);
             a.setModified.delete(1);
@@ -364,7 +368,7 @@ describe("Save/Delete/Update", () => {
             a.createdNewEmptyMap = new Map();
             a.mapEmptied.clear();
 
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
@@ -385,7 +389,7 @@ describe("Save/Delete/Update", () => {
             @Property()
             public relTest: string = "test";
         }
-        it("Saves new relation without cascade inserting", () => {
+        it("Saves new relation without cascade inserting", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -395,11 +399,11 @@ describe("Save/Delete/Update", () => {
                 public rel: Rel = new Rel();
             }
             const a = new A();
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Saves new relation with cascade inserting", () => {
+        it("Saves new relation with cascade inserting", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -409,11 +413,11 @@ describe("Save/Delete/Update", () => {
                 public rel: Rel = new Rel();
             }
             const a = new A();
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Saves new relation over previous relation without cascade inserting", () => {
+        it("Saves new relation over previous relation without cascade inserting", async () => {
             const rel = new Rel();
             @Entity()
             class A {
@@ -428,11 +432,11 @@ describe("Save/Delete/Update", () => {
             const newRel = new Rel();
             newRel.id = 2;
             a.rel = newRel;
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Throws if relation is invalid", () => {
+        it("Throws if relation is invalid", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -451,28 +455,28 @@ describe("Save/Delete/Update", () => {
             const a = new A();
             a.rel = {} as any;
             try {
-                operator.getSaveOperation(a);
+                await operator.getSaveOperation(a);
                 throw new ShouldThrowError();
             } catch (e) {
                 expect(e).toBeInstanceOf(MetadataError);
             }
             a.rel = new B() as any;
             try {
-                operator.getSaveOperation(a);
+                await operator.getSaveOperation(a);
                 throw new ShouldThrowError();
             } catch (e) {
                 expect(e).toBeInstanceOf(MetadataError);
             }
             a.rel = new C() as any;
             try {
-                operator.getSaveOperation(a);
+                await operator.getSaveOperation(a);
                 throw new ShouldThrowError();
             } catch (e) {
                 expect(e).toBeInstanceOf(MetadataError);
             }
         });
 
-        it("Saves new relation over previous relation with cascade inserting", () => {
+        it("Saves new relation over previous relation with cascade inserting", async () => {
             const rel = new Rel();
             @Entity()
             class A {
@@ -487,11 +491,11 @@ describe("Save/Delete/Update", () => {
             const newRel = new Rel();
             newRel.id = 2;
             a.rel = newRel;
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Change in relation without cascade update", () => {
+        it("Change in relation without cascade update", async () => {
             const rel = new Rel();
             @Entity()
             class A {
@@ -505,11 +509,11 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel.relTest = "new test";
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Change in relation with cascade update", () => {
+        it("Change in relation with cascade update", async () => {
             const rel = new Rel();
             @Entity()
             class A {
@@ -523,11 +527,11 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel.relTest = "new test";
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Set relation to null", () => {
+        it("Set relation to null", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -540,11 +544,11 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel = null;
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Set relation to undefined", () => {
+        it("Set relation to undefined", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -557,11 +561,11 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel = undefined;
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Set relation from null to undefined", () => {
+        it("Set relation from null to undefined", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -574,11 +578,11 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel = undefined;
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Update relation without cascadeUpdate", () => {
+        it("Update relation without cascadeUpdate", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -591,11 +595,11 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel.relTest = "new test";
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Update relation with cascadeUpdate", () => {
+        it("Update relation with cascadeUpdate", async () => {
             const rel = new Rel();
             TestRedisInitialValue(1)(rel, "id");
             @Entity()
@@ -610,7 +614,7 @@ describe("Save/Delete/Update", () => {
             }
             const a = new A();
             a.rel.relTest = "new test";
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
@@ -632,7 +636,7 @@ describe("Save/Delete/Update", () => {
             expect(res).toMatchSnapshot();
         });
 
-        it("Prevents circular references when inserting", () => {
+        it("Prevents circular references when inserting", async () => {
             @Entity()
             class A { 
                 @IdentifyProperty()
@@ -657,11 +661,11 @@ describe("Save/Delete/Update", () => {
             RelationProperty(type => [A, A], { cascadeInsert: true })(b, "aTest");
             a.bTest = b;
             b.aTest = a;
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Prevents circular references when updating", () => {
+        it("Prevents circular references when updating", async () => {
             @Entity()
             class A { 
                 @IdentifyProperty()
@@ -696,7 +700,7 @@ describe("Save/Delete/Update", () => {
             a.bTest = b;
             b.aTest = a;
             a.bTest.relTest = "olo test";
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
@@ -734,9 +738,9 @@ describe("Save/Delete/Update", () => {
                 public rel: Rel = new Rel();
             }
 
-            it("Insert", () => {
+            it("Insert", async () => {
                 const a = new A();
-                const res = operator.getSaveOperation(a);
+                const res = await operator.getSaveOperation(a);
                 expect(res).toMatchSnapshot();
             });
 
@@ -760,7 +764,7 @@ describe("Save/Delete/Update", () => {
                 expect(res).toMatchSnapshot();
             });
 
-            it("Updating", () => {
+            it("Updating", async () => {
                 const a = new A();
                 TestRedisInitialValue(1)(a, "id");
                 TestRedisInitialValue(a.rel)(a, "rel");
@@ -776,14 +780,14 @@ describe("Save/Delete/Update", () => {
                 TestRedisInitialValue("another rel")(a.rel.anotherRel, "text");
 
                 a.rel.anotherRel.text = "some new text";
-                let res = operator.getSaveOperation(a);
+                let res = await operator.getSaveOperation(a);
                 expect(res).toMatchSnapshot();
 
                 const newAnotherRel = new AnotherRel();
                 newAnotherRel.id = 2;
                 newAnotherRel.text = "new text";
                 a.rel.anotherRel = newAnotherRel;
-                res = operator.getSaveOperation(a);
+                res = await operator.getSaveOperation(a);
                 // must not delete AnotherRel:1
                 expect(res).toMatchSnapshot();
 
@@ -792,14 +796,14 @@ describe("Save/Delete/Update", () => {
                 newRel.set1.clear();
                 newRel.id = 2;
                 a.rel = newRel;
-                res = operator.getSaveOperation(a);
+                res = await operator.getSaveOperation(a);
                 expect(res).toMatchSnapshot();
             });
         });
     });
 
     describe("Multiple relations in sets", () => {
-        it("Save hash with relation in sets without cascade insert", () => {
+        it("Save hash with relation in sets without cascade insert", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -829,11 +833,11 @@ describe("Save/Delete/Update", () => {
 
             e.rels.add(rel1);
             e.rels.add(rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Save hash with relation in sets with cascade insert", () => {
+        it("Save hash with relation in sets with cascade insert", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -863,11 +867,11 @@ describe("Save/Delete/Update", () => {
 
             e.rels.add(rel1);
             e.rels.add(rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Save nested relations in sets with cascade insert", () => {
+        it("Save nested relations in sets with cascade insert", async () => {
             @Entity()
             class AnotherRel {
                 @IdentifyProperty()
@@ -909,11 +913,11 @@ describe("Save/Delete/Update", () => {
 
             e.rels.add(rel1);
             e.rels.add(rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Save cyclic relations with cascade insert", () => {
+        it("Save cyclic relations with cascade insert", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -934,11 +938,11 @@ describe("Save/Delete/Update", () => {
             RelationProperty(type => [A, Set], { cascadeInsert: true })(b, "aSet");
             a.bSet = new Set([b]);
             b.aSet = new Set([a]);
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Tracks deletion/addition of relations in set", () => {
+        it("Tracks deletion/addition of relations in set", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -977,11 +981,11 @@ describe("Save/Delete/Update", () => {
             e.rels.delete(rel2);
             e.rels.add(rel3);
 
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Tracks changes in relations with cascadeUpdate", () => {
+        it("Tracks changes in relations with cascadeUpdate", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1019,11 +1023,11 @@ describe("Save/Delete/Update", () => {
 
             rel2.prop = "changed prop";
 
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Works when replacing relation set with new object", () => {
+        it("Works when replacing relation set with new object", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1052,11 +1056,11 @@ describe("Save/Delete/Update", () => {
             }
             const e = new E();
             e.rels = new Set([...e.rels.values()].filter(rel => rel.id !== 1));
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Throws error if there are objects with same id but have different object links in relation set", () => {
+        it("Throws error if there are objects with same id but have different object links in relation set", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1086,7 +1090,7 @@ describe("Save/Delete/Update", () => {
             e.rels.add(rel2);
 
             try {
-                operator.getSaveOperation(e);
+                await operator.getSaveOperation(e);
                 throw new ShouldThrowError();
             } catch (e) {
                 expect(e).toBeInstanceOf(DuplicateIdsInEntityError);
@@ -1137,19 +1141,19 @@ describe("Save/Delete/Update", () => {
                 e.rels.add(rel2);
             });
 
-            it("throws if saving with cascade insert", () => {
+            it("throws if saving with cascade insert", async () => {
                 RelationProperty(type => [Rel, Set], { cascadeInsert: true })(e, "rels");
                 try {
-                    operator.getSaveOperation(e);
+                    await operator.getSaveOperation(e);
                     throw new ShouldThrowError();
                 } catch (e) {
                     expect(e).toBeInstanceOf(DuplicateIdsInEntityError);
                 }
             });
 
-            it("doesn't throws if saving without cascade insert", () => {
+            it("doesn't throws if saving without cascade insert", async () => {
                 RelationProperty(type => [Rel, Set])(e, "rels");
-                operator.getSaveOperation(e);
+                await operator.getSaveOperation(e);
             });
         });
 
@@ -1181,7 +1185,7 @@ describe("Save/Delete/Update", () => {
     });
 
     describe("Multiple relations in maps", () => {
-        it("Save hash with relation in maps without cascade insert", () => {
+        it("Save hash with relation in maps without cascade insert", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1211,11 +1215,11 @@ describe("Save/Delete/Update", () => {
 
             e.rels.set(1, rel1);
             e.rels.set(2, rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Save hash with relation in maps with cascade insert", () => {
+        it("Save hash with relation in maps with cascade insert", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1245,11 +1249,11 @@ describe("Save/Delete/Update", () => {
 
             e.rels.set(1, rel1);
             e.rels.set("2", rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Allows multiple keys to same relation object", () => {
+        it("Allows multiple keys to same relation object", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1282,11 +1286,11 @@ describe("Save/Delete/Update", () => {
             e.rels.set(3, rel1);
             e.rels.set(4, rel2);
             e.rels.set("4", rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Save nested relations in maps with cascade insert", () => {
+        it("Save nested relations in maps with cascade insert", async () => {
             @Entity()
             class AnotherRel {
                 @IdentifyProperty()
@@ -1328,11 +1332,11 @@ describe("Save/Delete/Update", () => {
 
             e.rels.set(1, rel1);
             e.rels.set(2, rel2);
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Save cyclic relations with cascade insert", () => {
+        it("Save cyclic relations with cascade insert", async () => {
             @Entity()
             class A {
                 @IdentifyProperty()
@@ -1353,11 +1357,11 @@ describe("Save/Delete/Update", () => {
             RelationProperty(type => [A, Map], { cascadeInsert: true })(b, "aMap");
             a.bMap = new Map([[1, b]]);
             b.aMap = new Map([[1, a]]);
-            const res = operator.getSaveOperation(a);
+            const res = await operator.getSaveOperation(a);
             expect(res).toMatchSnapshot();
         });
 
-        it("Tracks deletion/addition of relations in relation map", () => {
+        it("Tracks deletion/addition of relations in relation map", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1393,11 +1397,11 @@ describe("Save/Delete/Update", () => {
             e.rels.set(3, rel3);
             e.rels.set(1, rel3);
 
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Tracks changes in relations with cascadeUpdate", () => {
+        it("Tracks changes in relations with cascadeUpdate", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1433,11 +1437,11 @@ describe("Save/Delete/Update", () => {
 
             rel2.prop = "changed prop";
 
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Works when replacing relation map with new object", () => {
+        it("Works when replacing relation map with new object", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1469,11 +1473,11 @@ describe("Save/Delete/Update", () => {
                 [2, rel2]
             ]);
             e.rels = newMap;
-            const res = operator.getSaveOperation(e);
+            const res = await operator.getSaveOperation(e);
             expect(res).toMatchSnapshot();
         });
 
-        it("Throws error if there are objects with same id but have different object links in relation map", () => {
+        it("Throws error if there are objects with same id but have different object links in relation map", async () => {
             @Entity()
             class Rel {
                 @IdentifyProperty()
@@ -1503,7 +1507,7 @@ describe("Save/Delete/Update", () => {
             e.rels.set(2, rel2);
 
             try {
-                operator.getSaveOperation(e);
+                await operator.getSaveOperation(e);
                 throw new ShouldThrowError();
             } catch (e) {
                 expect(e).toBeInstanceOf(DuplicateIdsInEntityError);
@@ -1554,19 +1558,19 @@ describe("Save/Delete/Update", () => {
                 e.rels.set(2, rel2);
             });
 
-            it("throws if saving with cascade insert", () => {
+            it("throws if saving with cascade insert", async () => {
                 RelationProperty(type => [Rel, Map], { cascadeInsert: true })(e, "rels");
                 try {
-                    operator.getSaveOperation(e);
+                    await operator.getSaveOperation(e);
                     throw new ShouldThrowError();
                 } catch (e) {
                     expect(e).toBeInstanceOf(DuplicateIdsInEntityError);
                 }
             });
 
-            it("doesn't throws if saving without cascade insert", () => {
+            it("doesn't throws if saving without cascade insert", async () => {
                 RelationProperty(type => [Rel, Map])(e, "rels");
-                operator.getSaveOperation(e);
+                await operator.getSaveOperation(e);
             });
         });
 
@@ -1618,6 +1622,127 @@ describe("Save/Delete/Update", () => {
 
         res = operator.getDeleteOperation(A, "e:A:1");
         expect(res).toMatchSnapshot();
+    });
+
+    it("Returns delete operation for entity with lazy sets/maps", () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property(LazyMap)
+            public map: LazyMap<any, any>;
+
+            @Property(LazySet)
+            public set: LazySet<any>;
+        }
+        const resA = operator.getDeleteOperation(A, 1);
+        expect(resA).toMatchSnapshot();
+
+        @Entity()
+        class B {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => [A, LazyMap])
+            public map: LazyMap<any, any>;
+
+            @RelationProperty(type => [A, LazySet])
+            public set: LazySet<any>;
+        }
+        const resB = operator.getDeleteOperation(B, 1);
+        expect(resB).toMatchSnapshot();
+    });
+
+    describe("Save operation with lazy maps/sets", () => {
+        it("Doesn't push any operations for wrapped redis maps and sets", async () => {
+            @Entity()
+            class A {
+                @IdentifyProperty()
+                public id: number = 1;
+
+                @Property(LazyMap)
+                public map: LazyMap<any, any> = new LazyMap([[1, 1], [2, 1]]);
+
+                @Property(LazySet)
+                public set: LazySet<any> = new LazySet([1, 2, 3]);
+            }
+            const mockedLazyMap = new RedisLazyMap("", {} as any);
+            mockedLazyMap.toArray = jest.fn().mockReturnValue(Promise.resolve([[1, 1], [2, 1]]));
+            mockedLazyMap.size = jest.fn().mockReturnValue(Promise.resolve(2));
+            const mockedLazySet = new RedisLazySet("", {} as any);
+            mockedLazySet.toArray = jest.fn().mockReturnValue(Promise.resolve([1, 2, 3]));
+            mockedLazySet.size = jest.fn().mockReturnValue(Promise.resolve(3));
+            const a = new A();
+            a.map = mockedLazyMap;
+            a.set = mockedLazySet;
+
+            const op = await operator.getSaveOperation(a);
+            expect(op).toMatchSnapshot();
+        });
+
+        it("Treats lazy maps and sets as ordinary maps and sets for first save operation", async () => {
+            @Entity()
+            class A {
+                @IdentifyProperty()
+                public id: number = 1;
+
+                @Property(LazyMap)
+                public map: LazyMap<any, any> = new LazyMap([[1, 1], [2, 1]]);
+
+                @Property(LazySet)
+                public set: LazySet<any> = new LazySet([1, 2, 3]);
+            }
+            const a = new A();
+            let op = await operator.getSaveOperation(a);
+            expect(op).toMatchSnapshot();
+
+            @Entity()
+            class Rel {
+                @IdentifyProperty()
+                public id: number;
+            }
+
+            @Entity()
+            class B {
+                @IdentifyProperty()
+                public id: number = 1;
+
+                @RelationProperty(type => [Rel, LazyMap])
+                public map: LazyMap<any, any> = new LazyMap();
+
+                @RelationProperty(type => [Rel, LazySet])
+                public set: LazySet<any> = new LazySet();
+            }
+            const rel = new Rel();
+            rel.id = 1;
+            const b = new B();
+            await b.map.set(1, rel);
+            await b.map.set(2, rel);
+            await b.set.add(rel);
+
+            op = await operator.getSaveOperation(b);
+            expect(op).toMatchSnapshot();
+
+            @Entity()
+            class C {
+                @IdentifyProperty()
+                public id: number = 1;
+
+                @RelationProperty(type => [Rel, LazyMap], { cascadeInsert: true })
+                public map: LazyMap<any, any> = new LazyMap();
+
+                @RelationProperty(type => [Rel, LazySet], { cascadeInsert: true })
+                public set: LazySet<any> = new LazySet();
+            }
+            const c = new C();
+            await c.map.set(1, rel);
+            await c.map.set(2, rel);
+            await c.set.add(rel);
+
+            op = await operator.getSaveOperation(c);
+            expect(op).toMatchSnapshot();
+        });
     });
 });
 
@@ -1813,6 +1938,55 @@ describe("Load", () => {
 
         const res = operator.getLoadOperation("null", E);
         expect(res).toBeUndefined();
+    });
+
+    it("Doesn't load lazy sets or maps", () => {
+        @Entity()
+        class E {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property(LazySet)
+            public set: LazySet<any>;
+
+            @Property(LazyMap)
+            public map: LazyMap<number, string>;
+
+            @Property(RedisLazySet as any)
+            public set2: RedisLazySet<any>;
+
+            @Property(RedisLazyMap as any)
+            public map2: RedisLazyMap<any, any>;
+        }
+
+        @Entity()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => [Rel, LazySet])
+            public set: LazySet<any>;
+
+            @RelationProperty(type => [Rel, LazyMap])
+            public map: LazyMap<number, string>;
+
+            @RelationProperty(type => [Rel, RedisLazySet])
+            public set2: RedisLazySet<any>;
+
+            @RelationProperty(type => [Rel, RedisLazyMap])
+            public map2: RedisLazyMap<any, any>;
+        }
+
+        const eRes = operator.getLoadOperation(1, E);
+        const aRes = operator.getLoadOperation(1, A);
+        expect(eRes).toMatchSnapshot();
+        expect(aRes).toMatchSnapshot();
     });
 });
 
@@ -2130,6 +2304,26 @@ describe("Update metadata", () => {
         expect(Reflect.getMetadata(REDIS_VALUE, a, "set")).toBeUndefined();
         expect(Reflect.getMetadata(REDIS_VALUE, a, "map")).toBeUndefined();
         expect(Reflect.getMetadata(REDIS_COLLECTION_VALUE, a, "set")).toBeUndefined();
+        expect(Reflect.getMetadata(REDIS_COLLECTION_VALUE, a, "map")).toBeUndefined();
+    });
+
+    it("Process lazy sets/maps", () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property(LazySet)
+            public set: LazySet<any> = new LazySet([1, 2, 3]);
+
+            @Property(LazyMap)
+            public map: LazyMap<number, any> = new LazyMap([[1, 1]]);
+        }
+        const a = new A();
+        operator.updateMetadataInHash(a);
+        expect(Reflect.getMetadata(REDIS_VALUE, a, "set")).toBe("a:e:A:1:set");
+        expect(Reflect.getMetadata(REDIS_COLLECTION_VALUE, a, "set")).toBeUndefined();
+        expect(Reflect.getMetadata(REDIS_VALUE, a, "map")).toBe("m:e:A:1:map");
         expect(Reflect.getMetadata(REDIS_COLLECTION_VALUE, a, "map")).toBeUndefined();
     });
 });

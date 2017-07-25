@@ -1,3 +1,7 @@
+import { LazyMap } from "../../collections/LazyMap";
+import { LazySet } from "../../collections/LazySet";
+import { RedisLazyMap } from "../../collections/RedisLazyMap";
+import { RedisLazySet } from "../../collections/RedisLazySet";
 import { Connection } from "../../Connection/Connection";
 import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
@@ -406,7 +410,6 @@ describe("Save", () => {
         await manager.save(a);
         const res = await Promise.all([
             conn.client.hgetallAsync("e:A:1"),
-            conn.client.smembersAsync("a:e:A:1:mySet"),
             conn.client.hgetallAsync("m:e:A:1:myMap"),
             conn.client.hgetallAsync("e:Rel:1"),
             conn.client.hgetallAsync("e:Rel:2"),
@@ -414,6 +417,8 @@ describe("Save", () => {
             conn.client.hgetallAsync("e:Rel:4"),
         ]);
         expect(res).toMatchSnapshot();
+        const setRes = await conn.client.smembersAsync("a:e:A:1:mySet");
+        expect(setRes).toEqual(expect.arrayContaining(["e:Rel:1", "e:Rel:2"]));
     });
 
     it("Saves multiple relations with cascade insert", async () => {
@@ -674,6 +679,84 @@ describe("Save", () => {
 
         const res = await conn.client.hgetallAsync("m:e:A:1:map");
         expect(res).toMatchSnapshot();
+    });
+
+    it("Saves entity with simple lazy sets/maps", async () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @Property(LazySet)
+            public set: LazySet<any> = new LazySet([1, 2, 3]);
+
+            @Property()
+            public map: LazyMap<any, any> = new LazyMap([[1, "true"], [2, "false"]]);
+        }
+        const a = new A();
+        await manager.save(a);
+
+        let mapRes = await conn.client.hgetallAsync("m:e:A:1:map");
+        expect(mapRes).toEqual({
+            "i:1": "s:true",
+            "i:2": "s:false"
+        });
+        let setRes = await conn.client.smembersAsync("a:e:A:1:set");
+        expect(setRes).toEqual(expect.arrayContaining(["i:1", "i:2", "i:3"]));
+
+        await a.set.add(4);
+        setRes = await conn.client.smembersAsync("a:e:A:1:set");
+        expect(setRes).toContain("i:4");
+
+        await a.map.set(3, "test");
+        mapRes = await conn.client.hgetallAsync("m:e:A:1:map");
+        expect(mapRes).toMatchObject({ "i:3": "s:test" });
+    });
+
+    it("Saves entity with relation lazy sets/maps", async () => {
+        @Entity()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number = 1;
+
+            @RelationProperty(type => [Rel, LazySet], { cascadeInsert: true })
+            public set: LazySet<Rel> = new LazySet();
+
+            @RelationProperty(type => [Rel, LazyMap], { cascadeInsert: true })
+            public map: LazyMap<number, Rel> = new LazyMap();
+        }
+        const a = new A();
+        const rel1 = new Rel();
+        rel1.id = 1;
+        const rel2 = new Rel();
+        rel2.id = 2;
+        await a.set.add(rel1);
+        await a.map.set(1, rel2);
+
+        await manager.save(a);
+        let mapRes = await conn.client.hgetallAsync("m:e:A:1:map");
+        expect(mapRes).toEqual({ "i:1": "e:Rel:2" });
+        let setRes = await conn.client.smembersAsync("a:e:A:1:set");
+        expect(setRes).toEqual(["e:Rel:1"]);
+
+        const rel3 = new Rel();
+        rel3.id = 3;
+        await a.set.add(rel3);
+        await a.map.set(2, rel3);
+
+        mapRes = await conn.client.hgetallAsync("m:e:A:1:map");
+        expect(mapRes).toEqual({ "i:1": "e:Rel:2", "i:2": "e:Rel:3" });
+        setRes = await conn.client.smembersAsync("a:e:A:1:set");
+        expect(setRes).toEqual(expect.arrayContaining(["e:Rel:1", "e:Rel:3"]));
+        expect(await conn.client.existsAsync("e:Rel:1")).toBeTruthy();
+        expect(await conn.client.existsAsync("e:Rel:2")).toBeTruthy();
+        expect(await conn.client.existsAsync("e:Rel:3")).toBeTruthy();
     });
 });
 
@@ -1311,6 +1394,102 @@ describe("Load", () => {
         expect(b.relMap.size).toBe(0);
         expect(b.relMap2.size).toBe(1);
         expect(b.relMap2.get(1)!.id).toBe(6);
+    });
+
+    it("Loads entity with simple lazy sets/maps", async () => {
+        await conn.client.hmsetAsync("m:e:A:1:map", {
+            "i:1": "s:true",
+            "i:2": "s:false"
+        });
+        await conn.client.saddAsync("a:e:A:1:set", ["i:1", "i:2", "i:3"]);
+        await conn.client.hmsetAsync("e:A:1", {
+            id: "i:1",
+            map: "m:e:A:1:map",
+            set: "a:e:A:1:set"
+        });
+
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property(LazySet)
+            public set: LazySet<any> = new LazySet();
+
+            @Property()
+            public map: LazyMap<any, any> = new LazyMap();
+        }
+
+        const a = await manager.load(A, 1);
+        if (!a) { throw new Error(); }
+        expect(a.id).toBe(1);
+        expect(a.set).toBeInstanceOf(RedisLazySet);
+        expect(a.map).toBeInstanceOf(RedisLazyMap);
+
+        expect(await a.set.toArray()).toEqual(expect.arrayContaining([1, 2, 3]));
+        expect(await a.map.toArray()).toEqual([
+            [1, "true"],
+            [2, "false"]
+        ]);
+
+        await a.set.add(4);
+        expect(await a.set.toArray()).toEqual(expect.arrayContaining([1, 2, 3, 4]));
+        await a.map.set(3, "test");
+        expect(await a.map.toArray()).toEqual([
+            [1, "true"],
+            [2, "false"],
+            [3, "test"]
+        ]);
+    });
+
+    it("Loads entity with relation lazy sets/maps", async () => {
+        await conn.client.hmsetAsync("e:Rel:1", {
+            id: "i:1"
+        });
+        await conn.client.hmsetAsync("m:e:A:1:map", {
+            "i:1": "e:Rel:1",
+            "i:2": "e:Rel:2" // non exist
+        });
+        await conn.client.saddAsync("a:e:A:1:set", ["e:Rel:1", "e:Rel:2"]);
+        await conn.client.hmsetAsync("e:A:1", {
+            id: "i:1",
+            map: "m:e:A:1:map",
+            set: "a:e:A:1:set"
+        });
+        @Entity()
+        class Rel {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        @Entity()
+        class A { 
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => [Rel, LazySet])
+            public set: LazySet<Rel> = new LazySet();
+
+            @RelationProperty(type => [Rel, LazyMap])
+            public map: LazyMap<number, Rel> = new LazyMap();
+        }
+
+        const a = await manager.load(A, 1);
+        if (!a) { throw new Error(); }
+        expect(a.set).toBeInstanceOf(RedisLazySet);
+        expect(a.map).toBeInstanceOf(RedisLazyMap);
+
+        const rel1 = await a.map.get(1);
+        expect(rel1).toBeInstanceOf(Rel);
+        expect(rel1!.id).toEqual(1);
+
+        const rel2 = await a.map.get(2);
+        expect(rel2).toBeUndefined();
+        expect(await a.map.size()).toBe(2);
+
+        expect(await a.set.size()).toBe(2);
+        const setVals = await a.set.toArray();
+        expect(setVals.map(val => val ? val.id : val)).toEqual([1]);
     });
 });
 
