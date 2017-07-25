@@ -73,6 +73,15 @@ export class LazySet<T> {
     }
 
     /**
+     * Get all values in array
+     * 
+     * @returns 
+     */
+    public async toArray(): Promise<T[]> {
+        return [...this.set.values()];
+    }
+
+    /**
      * Iterate over values
      */
     public async * values() {

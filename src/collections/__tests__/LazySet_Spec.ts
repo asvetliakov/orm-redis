@@ -21,6 +21,8 @@ it("Ordinary set but with promised methods", async () => {
     }
     expect(iterated).toEqual(expect.arrayContaining([1, 2]));
 
-    const values = await Promise.all([...set]);
+    let values = await Promise.all([...set]);
+    expect(values).toEqual(expect.arrayContaining([1, 2]));
+    values = await set.toArray();
     expect(values).toEqual(expect.arrayContaining([1, 2]));
 });

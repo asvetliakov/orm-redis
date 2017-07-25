@@ -175,6 +175,19 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
     }
 
     /**
+     * Convert map to array
+     * 
+     * @returns 
+     */
+    public async toArray(): Promise<Array<[K, V]>> {
+        const res: Array<[K, V]> = [];
+        for await (const pair of this) {
+            res.push(pair);
+        }
+        return res;
+    }
+
+    /**
      * Iterate over map keys => values
      * 
      * @returns 

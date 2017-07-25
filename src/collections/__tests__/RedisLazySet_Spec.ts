@@ -241,6 +241,18 @@ describe("clear", () => {
     });
 });
 
+describe("toArray", () => {
+    it("Returns all set values in array", async () => {
+        const set = new RedisLazySet("a:mySet", manager);
+
+        await set.add(1);
+        await set.add(true);
+        await set.add("test");
+        const arr = await set.toArray();
+        expect(arr).toEqual(expect.arrayContaining([1, true, "test"]));
+    });
+});
+
 describe("Values", () => {
     it("Iterates over simple set values", async () => {
         const prefill: number[] = [];

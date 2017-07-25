@@ -337,6 +337,26 @@ describe("Clear", () => {
     });
 });
 
+describe("toArray", () => {
+    it("Returns array of map pairs", async () => {
+        await conn.client.hmsetAsync("myMap", {
+            "i:1": "s:a",
+            "i:2": "s:a",
+            "i:3": "s:a",
+            "i:4": "s:a",
+            "i:5": "s:a",
+        });
+        const map = new RedisLazyMap("myMap", manager);
+        expect(await map.toArray()).toEqual([
+            [1, "a"],
+            [2, "a"],
+            [3, "a"],
+            [4, "a"],
+            [5, "a"],
+        ]);
+    });
+});
+
 describe("Iterators", () => {
     it("Iterates over keys for simple map", async () => {
         await conn.client.hmsetAsync("myMap", {

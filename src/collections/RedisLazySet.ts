@@ -137,6 +137,19 @@ export class RedisLazySet<T> extends LazySet<T> {
     }
 
     /**
+     * Convert set to array
+     * 
+     * @returns 
+     */
+    public async toArray(): Promise<T[]> {
+        const results: T[] = [];
+        for await (const v of this.values()) {
+            results.push(v);
+        }
+        return results;
+    }
+
+    /**
      * Iterate over values
      */
     public async * values(): AsyncIterableIterator<T> {

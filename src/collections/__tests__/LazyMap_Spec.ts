@@ -35,4 +35,9 @@ it("It's ordinary promised map", async () => {
         [2, "test2"],
         [3, "test3"]
     ]);
+    expect(await map.toArray()).toEqual([
+        [1, "test"],
+        [2, "test2"],
+        [3, "test3"]
+    ]);
 });

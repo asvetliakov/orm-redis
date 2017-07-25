@@ -85,6 +85,15 @@ export class LazyMap<K, V> {
     }
 
     /**
+     * Convert to array
+     * 
+     * @returns 
+     */
+    public async toArray(): Promise<Array<[K, V]>> {
+        return [...this.map];
+    }
+
+    /**
      * Keys iterator
      * 
      * @returns 
