@@ -24,11 +24,18 @@ export class RedisLazySet<T> extends LazySet<T> {
     private setId: string;
 
     /**
-     * Relation class
+     * Entity class
      * 
      * @private
      */
     private entityClass?: Function;
+
+    /**
+     * Cascade insert related entities
+     * 
+     * @private
+     */
+    private cascadeInsert: boolean;
 
     /**
      * Creates an instance of RedisLazySet.
@@ -36,11 +43,12 @@ export class RedisLazySet<T> extends LazySet<T> {
      * @param manager Manager instance
      * @param [entityClass] If passed then set will be treated as entity set and will return entities
      */
-    public constructor(setId: string, manager: RedisManager, entityClass?: EntityType<T>) {
+    public constructor(setId: string, manager: RedisManager, entityClass?: EntityType<T>, cascadeInsert: boolean = false) {
         super();
         this.manager = manager;
         this.setId = setId;
         this.entityClass = entityClass;
+        this.cascadeInsert = cascadeInsert;
     }
 
     /**
@@ -52,7 +60,9 @@ export class RedisLazySet<T> extends LazySet<T> {
     public async add(value: T): Promise<void> {
         if (this.entityClass) {
             // Entity
-            await this.manager.save(value as any);
+            if (this.cascadeInsert) {
+                await this.manager.save(value as any);
+            }
             await this.manager.connection.client.saddAsync(this.setId, getEntityFullId(value)!);
         } else {
             const serializedVal = this.manager.serializeSimpleValue(value);
@@ -63,16 +73,19 @@ export class RedisLazySet<T> extends LazySet<T> {
     }
 
     /**
-     * Remove value or entity from the set. If set is the relation set then it's automatically remove entity
+     * Remove value or entity from the set.
      * 
      * @param value 
+     * @param [deleteEntity=false]
      * @returns 
      */
-    public async delete(value: T): Promise<boolean> {
+    public async delete(value: T, deleteEntity: boolean = false): Promise<boolean> {
         let res: number;
         if (this.entityClass) {
             // Entity
-            await this.manager.remove(value as any);
+            if (deleteEntity) {
+                await this.manager.remove(value as any);
+            }
             res = await this.manager.connection.client.sremAsync(this.setId, getEntityFullId(value)!);
         } else {
             const serializedVal = this.manager.serializeSimpleValue(value);
@@ -107,6 +120,20 @@ export class RedisLazySet<T> extends LazySet<T> {
      */
     public async size(): Promise<number> {
         return await this.manager.connection.client.scardAsync(this.setId);
+    }
+
+    /**
+     * Clear set
+     * 
+     * @param [deleteEntities=false] Also delete all entities
+     * @returns 
+     */
+    public async clear(deleteEntities: boolean = false): Promise<void> {
+        if (this.entityClass && deleteEntities) {
+            const setVals = await this.manager.connection.client.smembersAsync(this.setId);
+            await this.manager.removeById(this.entityClass, setVals);
+        }
+        await this.manager.connection.client.delAsync(this.setId);
     }
 
     /**

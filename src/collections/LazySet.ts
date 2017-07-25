@@ -36,9 +36,10 @@ export class LazySet<T> {
      * Delete value from the set
      * 
      * @param value 
+     * @param [deleteEntity=false] Also delete entity if it's entity set
      * @returns 
      */
-    public async delete(value: T): Promise<boolean> {
+    public async delete(value: T, deleteEntity: boolean = false): Promise<boolean> {
         return this.set.delete(value);
     }
 
@@ -59,6 +60,16 @@ export class LazySet<T> {
      */
     public async size(): Promise<number> {
         return this.set.size;
+    }
+
+    /**
+     * Clear set
+     * 
+     * @param [deleteEntities=false] Also delete all entities
+     * @returns 
+     */
+    public async clear(deleteEntities: boolean = false): Promise<void> {
+        this.set.clear();
     }
 
     /**

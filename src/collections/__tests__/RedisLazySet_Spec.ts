@@ -44,7 +44,7 @@ describe("Add", () => {
         ]));
     });
 
-    it("Add entity", async () => {
+    it("Add entity with/without cascade insert", async () => {
         @Entity()
         class Ent {
             @IdentifyProperty()
@@ -67,11 +67,32 @@ describe("Add", () => {
             "e:Ent:1",
             "e:Ent:2"
         ]));
+        const exists = await Promise.all([
+            conn.client.existsAsync("e:Ent:1"),
+            conn.client.existsAsync("e:Ent:2"),
+        ]);
+        expect(exists).toEqual([0, 0]);
+
+        const set2 = new RedisLazySet<Ent>("a:set2", manager, Ent, true);
+        await set2.add(ent1);
+        await set2.add(ent2);
+        const set2Res = await conn.client.smembersAsync("a:set2");
+        expect(set2Res).toEqual(expect.arrayContaining([
+            "e:Ent:1",
+            "e:Ent:2"
+        ]));
         const res = await Promise.all([
             conn.client.hgetallAsync("e:Ent:1"),
             conn.client.hgetallAsync("e:Ent:2"),
         ]);
-        expect(res).toMatchSnapshot();
+        expect(res[0]).toEqual({
+            id: "i:1",
+            prop: "s:test prop",
+        });
+        expect(res[1]).toEqual({
+            id: "i:2",
+            prop: "s:test prop",
+        });
     });
 });
 
@@ -87,22 +108,17 @@ describe("Delete", () => {
         expect(res).toEqual(["i:3"]);
     });
 
-    it("Deletes entity from set and entity itself", async () => {
+    it("Deletes entity from set and entity itself if requested", async () => {
         @Entity()
         class Ent {
             @IdentifyProperty()
             public id: number;
-
-            @Property()
-            public prop: string = "test prop";
         }
-        const set = new RedisLazySet<Ent>("a:mySet", manager, Ent);
+        const set = new RedisLazySet<Ent>("a:mySet", manager, Ent, true);
         const ent1 = new Ent();
         ent1.id = 1;
         const ent2 = new Ent();
         ent2.id = 2;
-        await manager.save(ent1);
-        await manager.save(ent2);
 
         await set.add(ent1);
         await set.add(ent2);
@@ -118,8 +134,11 @@ describe("Delete", () => {
         expect(setRes).toEqual([
             "e:Ent:1",
         ]);
-        const ent2Res = await conn.client.hgetallAsync("e:Ent:2");
-        expect(ent2Res).toBeNull();
+        const ent2Res = await conn.client.existsAsync("e:Ent:2");
+        expect(ent2Res).toBe(1);
+        await set.delete(ent1, true);
+        const ent1Res = await conn.client.existsAsync("e:Ent:1");
+        expect(ent1Res).toBe(0);
     });
 });
 
@@ -164,6 +183,61 @@ describe("Size", () => {
         await conn.client.saddAsync("a:mySet", "i:1", "i:2", "i:3");
         const set = new RedisLazySet("a:mySet", manager);
         expect(await set.size()).toBe(3);
+    });
+});
+
+describe("clear", () => {
+    it("Deletes simple set", async () => {
+        const set = new RedisLazySet("a:mySet", manager);
+
+        await set.add(1);
+        await set.add(true);
+        await set.add("test");
+        await set.clear();
+        const res = await conn.client.smembersAsync("a:mySet");
+        expect(res).toEqual([]);
+    });
+
+    it("Deletes entity set with entities if requested", async () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        const set1 = new RedisLazySet("a:mySet", manager, A, true);
+        const set2 = new RedisLazySet("a:mySet2", manager, A, true);
+        const a1 = new A();
+        a1.id = 1;
+        const a2 = new A();
+        a2.id = 2;
+        const a3 = new A();
+        a3.id = 3;
+        const a4 = new A();
+        a4.id = 4;
+
+        await set1.add(a1);
+        await set1.add(a2);
+
+        await set2.add(a3);
+        await set2.add(a4);
+
+        await set1.clear();
+        await set2.clear(true);
+        
+        const setsExists = await Promise.all([
+            conn.client.existsAsync("a:mySet"),
+            conn.client.existsAsync("a:mySet2"),
+        ]);
+        expect(setsExists).toEqual([0, 0]);
+
+        const aExists = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("e:A:2"),
+            conn.client.existsAsync("e:A:3"),
+            conn.client.existsAsync("e:A:4"),
+        ]);
+        expect(aExists).toEqual([1, 1, 0, 0]);
     });
 });
 
