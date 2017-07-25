@@ -1,8 +1,8 @@
 {
   "name": "orm-redis",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "ORM Like Redis mapper for Typescript",
-  "main": "index.js",
+  "main": "compiled/index.js",
   "scripts": {
     "clean": "node ./helpers/clean.js",
     "ts": "tsc -p tsconfig-build.json",
