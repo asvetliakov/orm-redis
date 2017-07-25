@@ -1,6 +1,6 @@
 {
   "name": "orm-redis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ORM Like Redis mapper for Typescript",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,11 @@
     "lint": "tslint 'src/**/*'",
     "build": "run-s clean ts lint",
     "test:coverage": "cross-env REDIS_HOST=localhost REDIS_PORT=6379 jest --coverage --no-cache",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asvetliakov/orm-redis"
   },
   "author": "Alexey Svetliakov <asvetliakov@teledini.com>",
   "license": "ISC",
