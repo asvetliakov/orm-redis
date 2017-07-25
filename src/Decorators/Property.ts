@@ -1,5 +1,5 @@
-import { LazyMap } from "../collections/LazyMap";
-import { LazySet } from "../collections/LazySet";
+import { LazyMap } from "../Collections/LazyMap";
+import { LazySet } from "../Collections/LazySet";
 import { PropertyMetadata, REDIS_PROPERTIES } from "../Metadata/Metadata";
 
 export type ValidType =

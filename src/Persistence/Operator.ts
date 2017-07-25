@@ -1,7 +1,7 @@
-import { LazyMap } from "../collections/LazyMap";
-import { LazySet } from "../collections/LazySet";
-import { RedisLazyMap } from "../collections/RedisLazyMap";
-import { RedisLazySet } from "../collections/RedisLazySet";
+import { LazyMap } from "../Collections/LazyMap";
+import { LazySet } from "../Collections/LazySet";
+import { RedisLazyMap } from "../Collections/RedisLazyMap";
+import { RedisLazySet } from "../Collections/RedisLazySet";
 import { DuplicateIdsInEntityError, MetadataError } from "../Errors/Errors";
 import { getEntityFullId, getEntityProperties, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_ENTITY, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";

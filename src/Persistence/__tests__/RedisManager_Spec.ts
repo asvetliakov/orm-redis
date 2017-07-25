@@ -1,7 +1,7 @@
-import { LazyMap } from "../../collections/LazyMap";
-import { LazySet } from "../../collections/LazySet";
-import { RedisLazyMap } from "../../collections/RedisLazyMap";
-import { RedisLazySet } from "../../collections/RedisLazySet";
+import { LazyMap } from "../../Collections/LazyMap";
+import { LazySet } from "../../Collections/LazySet";
+import { RedisLazyMap } from "../../Collections/RedisLazyMap";
+import { RedisLazySet } from "../../Collections/RedisLazySet";
 import { Connection } from "../../Connection/Connection";
 import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";

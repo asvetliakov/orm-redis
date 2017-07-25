@@ -1,6 +1,6 @@
+import { LazySet } from "../Collections/LazySet";
 import { getEntityFullId } from "../Metadata/Metadata";
 import { EntityType, RedisManager } from "../Persistence/RedisManager";
-import { LazySet } from "./LazySet";
 
 /**
  * Redis-backed lazy set

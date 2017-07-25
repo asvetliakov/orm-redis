@@ -24,6 +24,10 @@
     "include": [
         "src/**/*"
     ],
+    "files": [
+        "src/testutils/redis.ts",
+        "src/testutils/index.ts"
+    ],
     "exclude": [
         "**/*_Spec.*",
         "src/testutils"
