@@ -2,3 +2,4 @@ compiled
 node_modules
 **/*.js
 **/*.map
+!testutils.js
