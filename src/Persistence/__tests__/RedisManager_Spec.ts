@@ -841,6 +841,39 @@ describe("Remove", () => {
         ]);
         expect(res).toEqual([0, 0, 0]);
     });
+
+    it("Deletes many entities by id", async () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        const a1 = new A();
+        a1.id = 1;
+        const a2 = new A();
+        a2.id = 2;
+        const a3 = new A();
+        a3.id = 3;
+        await manager.save(a1);
+        await manager.save(a2);
+        await manager.save(a3);
+
+        let res = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("e:A:2"),
+            conn.client.existsAsync("e:A:3"),
+        ]);
+        expect(res).toEqual([1, 1, 1]);
+
+        await manager.removeById(A, [1, 2, 3]);
+        res = await Promise.all([
+            conn.client.existsAsync("e:A:1"),
+            conn.client.existsAsync("e:A:2"),
+            conn.client.existsAsync("e:A:3"),
+        ]);
+        expect(res).toEqual([0, 0, 0]);
+    });
 });
 
 describe("Load", () => {

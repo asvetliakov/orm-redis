@@ -259,17 +259,20 @@ export class RedisManager {
      * @param id 
      * @returns 
      */
-    public async removeById(entityClass: EntityType<any>, id: string | number): Promise<void> {
-        const operation = this.operator.getDeleteOperation(entityClass, id);
-        if (this.isEmptyPersistenceOperation(operation)) {
+    public async removeById(entityClass: EntityType<any>, id: string | number | string[] | number[]): Promise<void> {
+        const idsToRemove = Array.isArray(id) ? id : [id];
+        const operations = idsToRemove.map(id => this.operator.getDeleteOperation(entityClass, id));
+        if (operations.every(this.isEmptyPersistenceOperation)) {
             return;
         }
         await this.connection.transaction(executor => {
-            for (const deleteSet of operation.deletesSets) {
-                executor.del(deleteSet);
-            }
-            for (const deleteHash of operation.deleteHashes) {
-                executor.del(deleteHash);
+            for (const operation of operations) {
+                for (const deleteSet of operation.deletesSets) {
+                    executor.del(deleteSet);
+                }
+                for (const deleteHash of operation.deleteHashes) {
+                    executor.del(deleteHash);
+                }
             }
         });
     }
