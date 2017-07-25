@@ -10,7 +10,8 @@
     "test": "cross-env REDIS_HOST=localhost REDIS_PORT=6379 jest",
     "lint": "tslint 'src/**/*'",
     "build": "run-s clean ts lint",
-    "test:coverage": "cross-env REDIS_HOST=localhost REDIS_PORT=6379 jest --coverage --no-cache"
+    "test:coverage": "cross-env REDIS_HOST=localhost REDIS_PORT=6379 jest --coverage --no-cache",
+    "prepublish": "npm run build"
   },
   "author": "Alexey Svetliakov <asvetliakov@teledini.com>",
   "license": "ISC",
