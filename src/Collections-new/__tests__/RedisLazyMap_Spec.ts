@@ -1,4 +1,3 @@
-import { RedisLazyMap } from "../../Collections/RedisLazyMap";
 import { Connection } from "../../Connection/Connection";
 import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
@@ -6,6 +5,7 @@ import { Property } from "../../Decorators/Property";
 import { RedisManager } from "../../Persistence/RedisManager";
 import { cleanRedisConnection, createRedisConnection } from "../../testutils/redis";
 import { RedisTestMonitor } from "../../testutils/RedisTestMonitor";
+import { RedisLazyMap } from "../RedisLazyMap";
 
 let conn: Connection;
 let manager: RedisManager;

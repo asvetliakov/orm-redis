@@ -1,6 +1,6 @@
-import { LazyMap } from "../Collections/LazyMap";
 import { getEntityFullId } from "../Metadata/Metadata";
 import { EntityType, RedisManager } from "../Persistence/RedisManager";
+import { LazyMap } from "./LazyMap";
 
 export class RedisLazyMap<K, V> extends LazyMap<K, V> {
     /**
