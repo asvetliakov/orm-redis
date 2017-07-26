@@ -57,7 +57,9 @@ export class Connection {
     /**
      * Creates an instance of Connection.
      */
-    public constructor() { }
+    public constructor() { 
+        this.manager = new RedisManager(this);
+    }
     
     /**
      * Init connection & connect
@@ -74,7 +76,7 @@ export class Connection {
         try {
             this.initPubSubListener();
             const subscribers = this.loadEntitySubscribers(this.options.entitySubscribers);
-            this.manager = new RedisManager(this, subscribers);
+            this.manager.assignSubscribers(subscribers);
             this.isConnected = true;
         } catch (e) {
             await this.disconnect();

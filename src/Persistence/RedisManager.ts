@@ -42,12 +42,19 @@ export class RedisManager {
     /**
      * Creates an instance of RedisManager.
      * @param connection 
+     */
+    public constructor(connection: Connection) {
+        this.connection = connection;
+        this.operator = new Operator();
+    }
+
+    /**
+     * Assign entity subscribers
+     * 
      * @param subscribers 
      */
-    public constructor(connection: Connection, subscribers: Array<EntitySubscriberInterface<any>>) {
-        this.connection = connection;
+    public assignSubscribers(subscribers: Array<EntitySubscriberInterface<any>>) {
         this.subscribers = subscribers;
-        this.operator = new Operator();
     }
     
     /**
