@@ -1,4 +1,5 @@
 import { Connection, ConnectionOptions } from "../Connection/Connection";
+import { createRedisConnection as createRedisConnectionOriginal } from "../index";
 import * as redis from "../utils/PromisedRedis";
 
 
@@ -61,15 +62,15 @@ const connectionToDbNumber = new WeakMap<Connection, string>();
  */
 export async function createRedisConnection(options: ConnectionOptions = {}): Promise<Connection> {
     const dbNumber = await getAvailableDatabase();
-    const connection = new Connection();
-    connectionToDbNumber.set(connection, dbNumber);
+    let connection: Connection;
     try {
-        await connection.connect({
+        connection = await createRedisConnectionOriginal({
             db: dbNumber,
             host: process.env.REDIS_HOST,
             port: parseInt(process.env.REDIS_PORT!) || 6379,
             ...options
         });
+        connectionToDbNumber.set(connection, dbNumber);
     } catch (e) {
         await releaseDatabase(dbNumber);
         throw e;
