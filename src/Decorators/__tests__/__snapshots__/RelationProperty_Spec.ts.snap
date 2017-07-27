@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Defines metadata For set or map of relations 1`] = `
+exports[`For set or map of relations 1`] = `
 Array [
   Object {
     "isRelation": true,
@@ -11,7 +11,7 @@ Array [
       "cascadeInsert": false,
       "cascadeUpdate": false,
     },
-    "relationType": [Function],
+    "relationTypeFunc": [Function],
   },
   Object {
     "isRelation": true,
@@ -22,12 +22,12 @@ Array [
       "cascadeInsert": false,
       "cascadeUpdate": false,
     },
-    "relationType": [Function],
+    "relationTypeFunc": [Function],
   },
 ]
 `;
 
-exports[`Defines metadata With default values 1`] = `
+exports[`With default values 1`] = `
 Array [
   Object {
     "isRelation": true,
@@ -38,12 +38,12 @@ Array [
       "cascadeInsert": false,
       "cascadeUpdate": false,
     },
-    "relationType": [Function],
+    "relationTypeFunc": [Function],
   },
 ]
 `;
 
-exports[`Defines metadata With relation options 1`] = `
+exports[`With relation options 1`] = `
 Array [
   Object {
     "isRelation": true,
@@ -55,7 +55,7 @@ Array [
       "cascadeUpdate": true,
       "propertyName": "testName",
     },
-    "relationType": [Function],
+    "relationTypeFunc": [Function],
   },
 ]
 `;

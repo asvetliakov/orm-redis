@@ -1,98 +1,59 @@
 import { PropertyMetadata, REDIS_PROPERTIES, RelationPropertyMetadata } from "../../Metadata/Metadata";
-import { ShouldThrowError } from "../../testutils/ShouldThrowError";
 import { Entity } from "../Entity";
 import { RelationProperty } from "../RelationProperty";
+@Entity()
+class Rel { }
 
-it("Throws error if relation type is not specified", () => {
-    const R = class { };
-    const C = class {
-        public test: typeof R;
-    };
-    const c = new C();
-    try {
-        RelationProperty(() => undefined as any)(c, "test");
-        throw new ShouldThrowError();
-    } catch (e) {
-        if (e instanceof ShouldThrowError) { throw e; }
-    }
-    
-    try {
-        RelationProperty(() => 5 as any)(c, "test");
-        throw new ShouldThrowError();
-    } catch (e) {
-        if (e instanceof ShouldThrowError) { throw e; }
-    }
-});
-
-it("Throws if relation doesn't contain RedisHash decorator", () => {
-    const R = class { };
-    const C = class {
-        public test: typeof R;
-    };
-    const c = new C();
-    try {
-        RelationProperty(() => R)(c, "test");
-        throw new ShouldThrowError();
-    } catch (e) {
-        if (e instanceof ShouldThrowError) { throw e; }
-    }
-});
-
-describe("Defines metadata", () => {
+it("With default values", () => {
     @Entity()
-    class Rel { }
-    
-    it("With default values", () => {
-        @Entity()
-        class C {
-            @RelationProperty(() => Rel)
-            public test: Rel;
-        }
-        const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
-        expect(metadata).toMatchSnapshot();
-        const relMetadata: RelationPropertyMetadata = metadata[0] as RelationPropertyMetadata;
-        expect(relMetadata.relationType).toBe(Rel);
-        expect(relMetadata.propertyType).toBe(Rel);
-    });
-    
-    it("With relation options", () => {
-        @Entity()
-        class C {
-            @RelationProperty(type => Rel, { cascadeUpdate: true, propertyName: "testName" })
-            public test: Rel;
-        }
-        const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
-        expect(metadata).toMatchSnapshot();
-    });
+    class C {
+        @RelationProperty(() => Rel)
+        public test: Rel;
+    }
+    const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
+    expect(metadata).toMatchSnapshot();
+    const relMetadata: RelationPropertyMetadata = metadata[0] as RelationPropertyMetadata;
+    expect(relMetadata.relationTypeFunc()).toBe(Rel);
+    expect(relMetadata.propertyType).toBe(Rel);
+});
 
-    it("With explicitly specified property type", () => {
-        @Entity()
-        class C {
-            @RelationProperty(() => [Rel, Rel])
-            public test: Rel;
-        }
-        const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
-        const relMetadata: RelationPropertyMetadata = metadata[0] as RelationPropertyMetadata;
-        expect(relMetadata.relationType).toBe(Rel);
-        expect(relMetadata.propertyType).toBe(Rel);
-    });
+it("With relation options", () => {
+    @Entity()
+    class C {
+        @RelationProperty(type => Rel, { cascadeUpdate: true, propertyName: "testName" })
+        public test: Rel;
+    }
+    const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
+    expect(metadata).toMatchSnapshot();
+});
 
-    it("For set or map of relations", () => {
-        @Entity()
-        class C {
-            @RelationProperty(() => [Rel, Set])
-            public test: Set<Rel>;
+it("With explicitly specified property type", () => {
+    @Entity()
+    class C {
+        @RelationProperty(() => [Rel, Rel])
+        public test: Rel;
+    }
+    const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
+    const relMetadata: RelationPropertyMetadata = metadata[0] as RelationPropertyMetadata;
+    expect(relMetadata.relationTypeFunc()).toEqual([Rel, Rel]);
+    expect(relMetadata.propertyType).toBe(Rel);
+});
 
-            @RelationProperty(() => [Rel, Map])
-            public test2: Map<string, Rel>;
-        }
-        const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
-        expect(metadata).toMatchSnapshot();
-        let relMetadata: RelationPropertyMetadata = metadata[0] as RelationPropertyMetadata;
-        expect(relMetadata.relationType).toBe(Rel);
-        expect(relMetadata.propertyType).toBe(Set);
-        relMetadata = metadata[1] as RelationPropertyMetadata;
-        expect(relMetadata.relationType).toBe(Rel);
-        expect(relMetadata.propertyType).toBe(Map);
-    });
+it("For set or map of relations", () => {
+    @Entity()
+    class C {
+        @RelationProperty(() => [Rel, Set])
+        public test: Set<Rel>;
+
+        @RelationProperty(() => [Rel, Map])
+        public test2: Map<string, Rel>;
+    }
+    const metadata: PropertyMetadata[] = Reflect.getMetadata(REDIS_PROPERTIES, C);
+    expect(metadata).toMatchSnapshot();
+    let relMetadata: RelationPropertyMetadata = metadata[0] as RelationPropertyMetadata;
+    expect(relMetadata.relationTypeFunc()).toEqual([Rel, Set]);
+    expect(relMetadata.propertyType).toBe(Set);
+    relMetadata = metadata[1] as RelationPropertyMetadata;
+    expect(relMetadata.relationTypeFunc(0)).toEqual([Rel, Map]);
+    expect(relMetadata.propertyType).toBe(Map);
 });

@@ -3,7 +3,7 @@ import { LazySet } from "../Collections/LazySet";
 import { RedisLazyMap } from "../Collections/RedisLazyMap";
 import { RedisLazySet } from "../Collections/RedisLazySet";
 import { DuplicateIdsInEntityError, MetadataError } from "../Errors/Errors";
-import { getEntityFullId, getEntityProperties, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_ENTITY, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
+import { getEntityFullId, getEntityProperties, getRelationType, PropertyMetadata, REDIS_COLLECTION_VALUE, REDIS_ENTITY, REDIS_PROPERTIES, REDIS_VALUE, RelationPropertyMetadata } from "../Metadata/Metadata";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";
 /**
  * Hash key add/remove operation. This applies for creating new hash and for modifying existing hash
@@ -243,7 +243,7 @@ export class Operator {
                         const preparedValueMap = new Map<string, any>();
                         for (const val of value.values()) {
                             if (propMetadata.isRelation) {
-                                const relationId = this.prepareRelationValue(val, propMetadata)!;
+                                const relationId = this.prepareRelationValue(entity, val, propMetadata)!;
                                 preparedValueMap.set(relationId, val);
                             } else {
                                 const preparedVal = this.serializeValue(val);
@@ -286,7 +286,7 @@ export class Operator {
                                     added.set(preparedKey, value.get(key));
                                 } else {
                                     const preparedValue = propMetadata.isRelation
-                                        ? this.prepareRelationValue(value.get(key), propMetadata)
+                                        ? this.prepareRelationValue(entity, value.get(key), propMetadata)
                                         : this.serializeValue(value.get(key));
                                     if ((redisInitialCollectionValue[preparedKey] !== preparedValue || // change value
                                         (propMetadata.isRelation && propMetadata.relationOptions.cascadeUpdate)) // cascade update will always force
@@ -403,7 +403,7 @@ export class Operator {
             } else {
                 // Ordinary hash value or single relation
                 const preparedValue = propMetadata.isRelation
-                    ? this.prepareRelationValue(value, propMetadata)
+                    ? this.prepareRelationValue(entity, value, propMetadata)
                     : this.serializeValue(value);
                 if (typeof preparedValue === "undefined" && initialPropertyRedisValue) {
                     // deletion
@@ -580,7 +580,7 @@ export class Operator {
                     if (!skipRelations.includes(propMetadata.propertyName)) {
                         operation.relationMappings.push({
                             ownerId: fullHashId,
-                            relationClass: propMetadata.relationType,
+                            relationClass: getRelationType(hashClass, propMetadata),
                             id: collId,
                             type: "set"
                         });
@@ -595,7 +595,7 @@ export class Operator {
                     if (!skipRelations.includes(propMetadata.propertyName)) {
                         operation.relationMappings.push({
                             ownerId: fullHashId,
-                            relationClass: propMetadata.relationType,
+                            relationClass: getRelationType(hashClass, propMetadata),
                             id: collId,
                             type: "map"
                         });
@@ -608,7 +608,7 @@ export class Operator {
                 if (propMetadata.isRelation && !skipRelations.includes(propMetadata.propertyName)) {
                     operation.relationMappings.push({
                         ownerId: fullHashId,
-                        relationClass: propMetadata.relationType,
+                        relationClass: getRelationType(hashClass, propMetadata),
                         id: propMetadata.propertyRedisName,
                         type: "key"
                     });
@@ -653,7 +653,7 @@ export class Operator {
                         Reflect.defineMetadata(REDIS_VALUE, collectionValueForProp, hashObject, propMetadata.propertyName);
                         const setValues = [...collection.values()].map(
                             val => propMetadata.isRelation
-                                ? this.prepareRelationValue(val, propMetadata)
+                                ? this.prepareRelationValue(hashObject, val, propMetadata)
                                 : this.serializeValue(val)
                         ).filter(val => typeof val !== "undefined");
                         Reflect.defineMetadata(REDIS_COLLECTION_VALUE, setValues, hashObject, propMetadata.propertyName);
@@ -663,7 +663,7 @@ export class Operator {
                         for (const [key, val] of collection) {
                             const preparedKey = this.serializeValue(key);
                             const preparedVal = propMetadata.isRelation
-                                ? this.prepareRelationValue(val, propMetadata)
+                                ? this.prepareRelationValue(hashObject, val, propMetadata)
                                 : this.serializeValue(val);
                             if (typeof preparedKey !== "undefined" && typeof preparedVal !== "undefined") {
                                 mapValues[preparedKey] = preparedVal;
@@ -685,7 +685,7 @@ export class Operator {
             } else {
                 const value = hashObject[propMetadata.propertyName];
                 const preparedValue = propMetadata.isRelation
-                    ? this.prepareRelationValue(hashObject[propMetadata.propertyName], propMetadata)
+                    ? this.prepareRelationValue(hashObject, hashObject[propMetadata.propertyName], propMetadata)
                     : this.serializeValue(hashObject[propMetadata.propertyName]);
                 if (typeof preparedValue !== "undefined") {
                     Reflect.defineMetadata(REDIS_VALUE, preparedValue, hashObject, propMetadata.propertyName);
@@ -985,8 +985,8 @@ export class Operator {
      * @param metadata 
      * @returns 
      */
-    private prepareRelationValue(value: any, metadata: RelationPropertyMetadata): string | undefined {
-        this.checkMetadata(metadata.relationType);
+    private prepareRelationValue(entityOrEntityClass: object | Function, value: any, metadata: RelationPropertyMetadata): string | undefined {
+        this.checkMetadata(getRelationType(entityOrEntityClass, metadata));
         if (value) {
             return this.getFullIdForEntityObject(value);
         } else if (value === null) {

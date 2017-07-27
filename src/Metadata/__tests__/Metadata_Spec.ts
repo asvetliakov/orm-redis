@@ -1,7 +1,9 @@
 import { Entity } from "../../Decorators/Entity";
 import { IdentifyProperty } from "../../Decorators/IdentifyProperty";
 import { Property } from "../../Decorators/Property";
-import { getEntityId, getEntityName, getEntityProperties, isRedisEntity } from "../Metadata";
+import { RelationProperty } from "../../Decorators/RelationProperty";
+import { ShouldThrowError } from "../../testutils/ShouldThrowError";
+import { getEntityId, getEntityName, getEntityProperties, getRelationType, isRedisEntity, RelationPropertyMetadata } from "../Metadata";
 
 describe("isRedisHash()", () => {
     it("returns false for non objects", () => {
@@ -106,5 +108,104 @@ describe("getRedisHashProperties()", () => {
         class A { }
         expect(getEntityProperties({})).toBeUndefined();
         expect(getEntityProperties(A)).toBeUndefined();
+    });
+});
+
+describe("getRelationType", () => {
+    it("Throws if given metadata is not a relation", () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @Property()
+            public test: string;
+        }
+
+        const metadata = getEntityProperties(A)!.find(m => m.propertyName === "test") as RelationPropertyMetadata;
+
+        try {
+            getRelationType(A, metadata);
+            throw new ShouldThrowError();
+        } catch (e) {
+            if (e instanceof ShouldThrowError) { throw e; }
+        }
+    });
+
+    it("Throws if relation type is not a function", () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => "" as any)
+            public test: string;
+
+            @RelationProperty(type => ["" as any, String])
+            public test2: string;
+        }
+
+        const metadata = getEntityProperties(A)!.find(m => m.propertyName === "test") as RelationPropertyMetadata;
+        const metadata2 = getEntityProperties(A)!.find(m => m.propertyName === "test2") as RelationPropertyMetadata;
+
+        try {
+            getRelationType(A, metadata);
+            throw new ShouldThrowError();
+        } catch (e) {
+            if (e instanceof ShouldThrowError) { throw e; }
+        }
+        try {
+            getRelationType(A, metadata2);
+            throw new ShouldThrowError();
+        } catch (e) {
+            if (e instanceof ShouldThrowError) { throw e; }
+        }
+    });
+
+    it("Throws if relation class is not entity", () => {
+        class Rel { }
+
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => Rel)
+            public test: Rel;
+        }
+
+        const metadata = getEntityProperties(A)!.find(m => m.propertyName === "test") as RelationPropertyMetadata;
+        try {
+            getRelationType(A, metadata);
+            throw new ShouldThrowError();
+        } catch (e) {
+            if (e instanceof ShouldThrowError) { throw e; }
+        }
+    });
+
+    it("Returns relation type", () => {
+        @Entity()
+        class B { 
+            @IdentifyProperty()
+            public id: number;
+        }
+
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+
+            @RelationProperty(type => B)
+            public test: B;
+
+            @RelationProperty(type => [B, Set])
+            public test2: Set<B>;
+        }
+
+        const metadata = getEntityProperties(A)!.find(m => m.propertyName === "test") as RelationPropertyMetadata;
+        const metadata2 = getEntityProperties(A)!.find(m => m.propertyName === "test2") as RelationPropertyMetadata;
+
+        expect(getRelationType(A, metadata)).toBe(B);
+        expect(getRelationType(A, metadata2)).toBe(B);
     });
 });

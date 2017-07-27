@@ -4,7 +4,7 @@ import { RedisLazyMap } from "../Collections/RedisLazyMap";
 import { RedisLazySet } from "../Collections/RedisLazySet";
 import { Connection } from "../Connection/Connection";
 import { MetadataError } from "../Errors/Errors";
-import { getEntityFullId, getEntityProperties, isRedisEntity } from "../Metadata/Metadata";
+import { getEntityFullId, getEntityProperties, getRelationType, isRedisEntity } from "../Metadata/Metadata";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
 import { hasPrototypeOf } from "../utils/hasPrototypeOf";
 import { HydrationData, LoadOperation, Operator, PersistenceOperation } from "./Operator";
@@ -339,7 +339,7 @@ export class RedisManager {
                         mapId,
                         this,
                         prop.isRelation
-                            ? prop.relationType
+                            ? getRelationType(entity, prop)
                             : undefined,
                         prop.isRelation
                             ? prop.relationOptions.cascadeInsert
@@ -353,7 +353,7 @@ export class RedisManager {
                         setId,
                         this,
                         prop.isRelation
-                            ? prop.relationType
+                            ? getRelationType(entity, prop)
                             : undefined,
                         prop.isRelation
                             ? prop.relationOptions.cascadeInsert

@@ -2653,7 +2653,7 @@ describe("hydrateData", () => {
             propertyName: "b",
             propertyRedisName: "b",
             propertyType: B,
-            relationType: B,
+            relationTypeFunc: () => B,
             isIdentifyColumn: false,
             relationOptions: { cascadeInsert: false, cascadeUpdate: false }
         });
@@ -2663,7 +2663,7 @@ describe("hydrateData", () => {
             propertyName: "a",
             propertyRedisName: "a",
             propertyType: A,
-            relationType: A,
+            relationTypeFunc: () => A,
             isIdentifyColumn: false,
             relationOptions: { cascadeInsert: false, cascadeUpdate: false }
         });

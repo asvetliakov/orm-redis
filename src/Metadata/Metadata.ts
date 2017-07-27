@@ -1,3 +1,4 @@
+import { MetadataError } from "../Errors/Errors";
 /**
  * Metadata key to mark class to be stored as redis hash
  */
@@ -50,6 +51,8 @@ export interface SimplePropertyMetadata {
     isRelation: false;
 }
 
+export type RelationTypeFunc = (type?: any) => Function | Function[];
+
 /**
  * Relation options
  * 
@@ -99,7 +102,7 @@ export interface RelationPropertyMetadata {
     /**
      * Relation type. Must be type of related entity
      */
-    relationType: any;
+    relationTypeFunc: RelationTypeFunc;
     /**
      * Relation options
      */
@@ -184,4 +187,29 @@ export function getEntityFullId(entityOrEntityClass: object | Function, hashId?:
     if (name && typeof id !== "undefined") {
         return `e:${name}:${id}`;
     }
+}
+
+/**
+ * Return relation type from relation type func from metadata
+ * 
+ * @export
+ * @param entityOrEntityClass 
+ * @param metadata 
+ * @returns 
+ */
+export function getRelationType(entityOrEntityClass: object | Function, metadata: RelationPropertyMetadata): Function {
+    const entityName = typeof entityOrEntityClass === "function" ? entityOrEntityClass : entityOrEntityClass.constructor;
+    if (!metadata.isRelation) {
+        throw new MetadataError(entityName, `${metadata.propertyName} is not a relation`);
+    }
+    const typeOrTypes = metadata.relationTypeFunc();
+    const type = Array.isArray(typeOrTypes) ? typeOrTypes[0] : typeOrTypes;
+
+    if (typeof type !== "function") {
+        throw new MetadataError(entityName, `Invalid relation type ${type} for property ${metadata.propertyName}`);
+    }
+    if (typeof Reflect.getMetadata(REDIS_ENTITY, type) === "undefined") {
+        throw new MetadataError(entityName, `Relation entity ${type.name} must be decorated with @Entity`);
+    }
+    return type;
 }

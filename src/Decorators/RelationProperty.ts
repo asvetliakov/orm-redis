@@ -1,5 +1,5 @@
 import { MetadataError } from "../Errors/Errors";
-import { PropertyMetadata, REDIS_ENTITY, REDIS_PROPERTIES, RelationOptions } from "../Metadata/Metadata";
+import { PropertyMetadata, REDIS_PROPERTIES, RelationOptions, RelationTypeFunc } from "../Metadata/Metadata";
 
 /** 
  * default options
@@ -8,8 +8,6 @@ const defaultOptions: RelationOptions = {
     cascadeInsert: false,
     cascadeUpdate: false
 };
-
-export type RelationTypeFunc = (type?: any) => Function | Function[];
 
 /**
  * Defines single or multiple relation property
@@ -44,25 +42,16 @@ export function RelationProperty(type: RelationTypeFunc, options?: RelationOptio
         
         const relationTypes = type();
 
-        let relationType: Function;
         let propertyType: Function;
         if (Array.isArray(relationTypes)) {
-            [relationType, propertyType] = relationTypes;
+            [, propertyType] = relationTypes;
         } else {
-            relationType = relationTypes;
             if (designType === Object) {
                 throw new MetadataError(target.constructor, `Relation's ${propertyKey} property type is detected as simple Object. This is error. Specify property type explicitly`);
             }
             propertyType = designType;
         }
 
-        
-        if (typeof relationType !== "function") {
-            throw new MetadataError(target.constructor, `Invalid relation type for relation ${propertyKey}`);
-        }
-        if (!Reflect.hasMetadata(REDIS_ENTITY, relationType)) {
-            throw new MetadataError(relationType, "Relation must contain RedisHash decorator");
-        }
         const finalOptions = {
             ...defaultOptions,
             ...options
@@ -74,7 +63,7 @@ export function RelationProperty(type: RelationTypeFunc, options?: RelationOptio
             propertyName: propertyKey,
             propertyRedisName: redisPropertyName,
             propertyType: propertyType,
-            relationType: relationType,
+            relationTypeFunc: type,
             relationOptions: finalOptions
         });
         Reflect.defineMetadata(REDIS_PROPERTIES, properties, target.constructor);
