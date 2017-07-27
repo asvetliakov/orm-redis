@@ -118,6 +118,22 @@ export class RedisManager {
         }
     }
 
+    /**
+     * Check if there is a given entity with given id
+     * 
+     * @param entityClass 
+     * @param id 
+     * @returns 
+     */
+    public async has(entityClass: EntityType<any>, id: string | number): Promise<boolean> {
+        const fullId = getEntityFullId(entityClass, id);
+        if (!fullId) {
+            throw new MetadataError(entityClass, "Unable to get entity id");
+        }
+        const exists = await this.connection.client.existsAsync(fullId);
+        return exists === 1 ? true : false;
+    }
+
     
     /**
      * Get entity

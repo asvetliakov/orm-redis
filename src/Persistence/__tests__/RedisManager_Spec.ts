@@ -760,6 +760,21 @@ describe("Save", () => {
     });
 });
 
+describe("Has", () => {
+    it("Checks for entity existence", async () => {
+        @Entity()
+        class A {
+            @IdentifyProperty()
+            public id: number;
+        }
+        const a = new A();
+        a.id = 1;
+        await manager.save(a);
+        expect(await manager.has(A, 1)).toBeTruthy();
+        expect(await manager.has(A, 2)).toBeFalsy();
+    });
+});
+
 describe("Remove", () => {
     it("Removes entity", async () => {
         @Entity()

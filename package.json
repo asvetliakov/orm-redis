@@ -1,6 +1,6 @@
 {
   "name": "orm-redis",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "ORM Like Redis mapper for Typescript",
   "main": "./compiled/index.js",
   "types": "./compiled/index.d.ts",
