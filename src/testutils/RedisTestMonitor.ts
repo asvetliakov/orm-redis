@@ -4,7 +4,7 @@ import { createRawRedisClient, getDatabaseNumberForConnection } from "./redis";
 
 export class RedisTestMonitor {
     // Array of calls -> results without any timestamps
-    private _calls: string[][] = [];
+    private _calls: string[][][] = [];
 
     /**
      * Redis client
@@ -25,7 +25,7 @@ export class RedisTestMonitor {
      * 
      * @readonly
      */
-    public get calls(): string[][] {
+    public get calls(): string[][][] {
         return this._calls;
     }
 
@@ -34,7 +34,7 @@ export class RedisTestMonitor {
      * 
      * @readonly
      */
-    public get requests(): string[] {
+    public get requests(): string[][] {
         return this._calls.map(([request, result]) => request);
     }
 
@@ -43,7 +43,7 @@ export class RedisTestMonitor {
      * 
      * @readonly
      */
-    public get responses(): string[] {
+    public get responses(): string[][] {
         return this._calls.map(([request, result]) => result);
     }
 
