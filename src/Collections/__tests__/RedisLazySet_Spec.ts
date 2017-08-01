@@ -312,6 +312,14 @@ describe("Values", () => {
         await monitor.wait(100);
         // req[0] is sscan
         // req[1] is a:mySet
-        expect(monitor.requests.map(req => [req[0], [req[1]]]).length).toBeGreaterThan(10);
+        expect(monitor.requests.map(req => [req[0], [req[1]]]).filter(([name]) => name === "sscan").length).toBeGreaterThan(4);
+        await monitor.clearMonitorCalls();
+
+        for await (const val of set.values(150)) {
+            // tslint:disable-next-line:no-unused-expression
+            val;
+        }
+        await monitor.wait(100);
+        expect(monitor.requests.map(req => [req[0], [req[1]]]).filter(([name]) => name === "sscan").length).toBe(1);
     });
 });

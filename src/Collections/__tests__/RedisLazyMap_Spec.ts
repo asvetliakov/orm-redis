@@ -464,4 +464,39 @@ describe("Iterators", () => {
             [6, 4]
         ]);
     });
+
+    it("Iterates with scan option", async () => {
+        await conn.client.hmsetAsync("myMap", {
+            "i:1": "s:test",
+            "s:test": "i:10",
+            "i:3": "b:0",
+            "s:5": "s:a",
+            "i:2": "s:11",
+            "i:8": "s:12",
+            "i:9": "s:13",
+            "i:10": "s:14",
+            "i:11": "s:15",
+            "i:12": "s:15",
+            "i:13": "s:15",
+            "i:14": "s:15",
+            "i:15": "s:15",
+            "i:16": "s:15",
+            "i:17": "s:15",
+            "i:18": "s:15",
+            "i:19": "s:15",
+            "i:20": "s:15",
+            "i:21": "b:1",
+            "i:22": "i:0",
+            "i:23": "i:5",
+        });
+        const map = new RedisLazyMap("myMap", manager);
+        await monitor.clearMonitorCalls(100);
+
+        for await (const v of map.keys(50)) {
+            // tslint:disable-next-line:no-unused-expression
+            v;
+        }
+        await monitor.wait(100);
+        expect(monitor.requests.length).toBe(1);
+    });
 });

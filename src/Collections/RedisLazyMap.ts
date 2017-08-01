@@ -181,7 +181,7 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
      */
     public async toArray(): Promise<Array<[K, V]>> {
         const res: Array<[K, V]> = [];
-        for await (const pair of this) {
+        for await (const pair of this.keysAndValues()) {
             res.push(pair);
         }
         return res;
@@ -189,11 +189,13 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
 
     /**
      * Iterate over map keys => values
+     * @param scanCount Redis SCAN's COUNT option 
      * 
      * @returns 
      */
-    public async *[Symbol.asyncIterator](): AsyncIterableIterator<[K, V]> {
-        let [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, "0");
+    public async * keysAndValues(scanCount?: number): AsyncIterableIterator<[K, V]> {
+        const scanOption = scanCount ? ["COUNT", scanCount] : [];
+        let [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, "0", ...scanOption);
         const getResults = async (result: string[]): Promise<any[]> => {
             const unserializedKeys = result.reduce((keys, current, index) => {
                 if (index % 2 === 0) {
@@ -229,7 +231,7 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
         }
 
         while (cursor !== "0") {
-            [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, cursor);
+            [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, cursor, ...scanOption);
             const res = await getResults(results);
             for (const keyVal of res) {
                 yield keyVal;
@@ -239,11 +241,13 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
 
     /**
      * Iterate over map's keys
+     * @param scanCount Redis SCAN's COUNT option 
      * 
      * @returns 
      */
-    public async * keys(): AsyncIterableIterator<K> {
-        let [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, "0");
+    public async * keys(scanCount?: number): AsyncIterableIterator<K> {
+        const scanOption = scanCount ? ["COUNT", scanCount] : [];
+        let [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, "0", ...scanOption);
         const getKeysFromResult = (result: string[]): any[] => {
             return results.reduce((keys, current, index) => {
                 if (index % 2 === 0) {
@@ -257,7 +261,7 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
             yield key;
         }
         while (cursor !== "0") {
-            [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, cursor);
+            [cursor, results] = await this.manager.connection.client.hscanAsync(this.mapId, cursor, ...scanOption);
             keys = getKeysFromResult(results);
             for (const key of keys) {
                 yield key;
@@ -267,11 +271,12 @@ export class RedisLazyMap<K, V> extends LazyMap<K, V> {
 
     /**
      * Iterate over map's values
+     * @param scanCount Redis SCAN's COUNT option 
      * 
      * @returns 
      */
-    public async * values(): AsyncIterableIterator<V> {
-        for await (const [, val] of this) {
+    public async * values(scanCount?: number): AsyncIterableIterator<V> {
+        for await (const [, val] of this.keysAndValues(scanCount)) {
             yield val;
         }
     }

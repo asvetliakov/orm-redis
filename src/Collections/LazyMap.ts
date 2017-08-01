@@ -95,10 +95,11 @@ export class LazyMap<K, V> {
 
     /**
      * Keys iterator
+     * @param scanCount Redis SCAN's COUNT option 
      * 
      * @returns 
      */
-    public async * keys(): AsyncIterableIterator<K> {
+    public async * keys(scanCount?: number): AsyncIterableIterator<K> {
         for (const k of this.map.keys()) {
             yield k;
         }
@@ -106,10 +107,11 @@ export class LazyMap<K, V> {
 
     /**
      * Values iterator
+     * @param scanCount Redis SCAN's COUNT option 
      * 
      * @returns 
      */
-    public async * values(): AsyncIterableIterator<V> {
+    public async * values(scanCount?: number): AsyncIterableIterator<V> {
         for (const v of this.map.values()) {
             yield v;
         }

@@ -151,9 +151,11 @@ export class RedisLazySet<T> extends LazySet<T> {
 
     /**
      * Iterate over values
+     * @param scanCount Redis SCAN's COUNT option 
      */
-    public async * values(): AsyncIterableIterator<T> {
-        let [cursor, results]: [string, any[]] = await this.manager.connection.client.sscanAsync(this.setId, "0");
+    public async * values(scanCount?: number): AsyncIterableIterator<T> {
+        const scanOption = scanCount ? ["COUNT", scanCount] : [];
+        let [cursor, results]: [string, any[]] = await this.manager.connection.client.sscanAsync(this.setId, "0", ...scanOption);
         // load entities
         if (this.entityClass && results.length > 0) {
             results = await this.manager.load(this.entityClass, results) as any;
@@ -164,7 +166,7 @@ export class RedisLazySet<T> extends LazySet<T> {
             yield res;
         }
         while (cursor !== "0") {
-            [cursor, results] = await this.manager.connection.client.sscanAsync(this.setId, cursor);
+            [cursor, results] = await this.manager.connection.client.sscanAsync(this.setId, cursor, ...scanOption);
             // load entities
             if (this.entityClass && results.length > 0) {
                 results = await this.manager.load(this.entityClass, results) as any;

@@ -83,8 +83,9 @@ export class LazySet<T> {
 
     /**
      * Iterate over values
+     * @param scanCount Redis SCAN's COUNT option 
      */
-    public async * values() {
+    public async * values(scanCount?: number) {
         for (const val of this.set.values()) {
             yield val;
         }
