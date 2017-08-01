@@ -26,7 +26,8 @@
     ],
     "files": [
         "src/testutils/redis.ts",
-        "src/testutils/index.ts"
+        "src/testutils/index.ts",
+        "src/testutils/RedisTestMonitor"
     ],
     "exclude": [
         "**/*_Spec.*",
