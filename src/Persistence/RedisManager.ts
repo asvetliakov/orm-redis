@@ -82,7 +82,7 @@ export class RedisManager {
 
         // Call entities subscribers
         // Do operation
-        await this.connection.transaction(executor => {
+        await this.connection.batch(executor => {
             for (const deleteSet of operation.deletesSets) {
                 executor.del(deleteSet);
             }
@@ -274,7 +274,7 @@ export class RedisManager {
         if (subscriber && subscriber.beforeRemove) {
             subscriber.beforeRemove(entity);
         }
-        await this.connection.transaction(executor => {
+        await this.connection.batch(executor => {
             for (const deleteSet of operation.deletesSets) {
                 executor.del(deleteSet);
             }
@@ -301,7 +301,7 @@ export class RedisManager {
         if (operations.every(this.isEmptyPersistenceOperation)) {
             return;
         }
-        await this.connection.transaction(executor => {
+        await this.connection.batch(executor => {
             for (const operation of operations) {
                 for (const deleteSet of operation.deletesSets) {
                     executor.del(deleteSet);

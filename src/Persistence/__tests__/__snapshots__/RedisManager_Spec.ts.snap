@@ -143,9 +143,6 @@ Array [
 exports[`Save Saves only changed properties 1`] = `
 Array [
   Array [
-    "multi",
-  ],
-  Array [
     "srem",
     "a:e:A:1:set1",
     "i:1",
@@ -181,9 +178,6 @@ Array [
     "i:2",
     "s:number2",
   ],
-  Array [
-    "exec",
-  ],
 ]
 `;
 
@@ -208,9 +202,6 @@ Array [
 exports[`Save Saves only changed properties 3`] = `
 Array [
   Array [
-    "multi",
-  ],
-  Array [
     "del",
     "a:e:A:1:set1",
   ],
@@ -223,9 +214,6 @@ Array [
     "e:A:1",
     "set1",
     "map1",
-  ],
-  Array [
-    "exec",
   ],
 ]
 `;
@@ -307,9 +295,6 @@ Array [
 exports[`Save Updates relations in maps/sets with cascade update 1`] = `
 Array [
   Array [
-    "multi",
-  ],
-  Array [
     "del",
     "m:e:A:1:myMap",
   ],
@@ -324,9 +309,6 @@ Array [
     "prop1",
     "s:new test",
   ],
-  Array [
-    "exec",
-  ],
 ]
 `;
 
@@ -340,16 +322,10 @@ Object {
 exports[`Save Updates single relation with with cascade updating 1`] = `
 Array [
   Array [
-    "multi",
-  ],
-  Array [
     "hmset",
     "e:A:1",
     "prop1",
     "s:cde",
-  ],
-  Array [
-    "exec",
   ],
 ]
 `;
