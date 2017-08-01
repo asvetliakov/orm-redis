@@ -178,15 +178,4 @@ export class RedisLazySet<T> extends LazySet<T> {
             }
         }
     }
-
-    /**
-     * Iterator over values
-     * 
-     * @returns 
-     */
-    public async * [Symbol.asyncIterator](): AsyncIterableIterator<T> {
-        for await (const val of this.values()) {
-            yield val;
-        }
-    }
 }

@@ -15,13 +15,13 @@ it("Ordinary set but with promised methods", async () => {
         expect(val).toEqual(expect.any(Number));
     }
     const iterated = [];
-    for await (const val of set) {
+    for await (const val of set.values()) {
         expect(val).toEqual(expect.any(Number));
         iterated.push(val);
     }
     expect(iterated).toEqual(expect.arrayContaining([1, 2]));
 
-    let values = await Promise.all([...set]);
+    let values = await set.toArray();
     expect(values).toEqual(expect.arrayContaining([1, 2]));
     values = await set.toArray();
     expect(values).toEqual(expect.arrayContaining([1, 2]));

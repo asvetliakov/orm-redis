@@ -90,20 +90,4 @@ export class LazySet<T> {
             yield val;
         }
     }
-
-    /**
-     * Iterate over values
-     * 
-     */
-    public async * [Symbol.asyncIterator](): AsyncIterableIterator<T> {
-        for (const val of this.set) {
-            yield val;
-        }
-    }
-
-    public *[Symbol.iterator](): IterableIterator<T> {
-        for (const val of this.set) {
-            yield Promise.resolve(val) as any;
-        }
-    }
 }

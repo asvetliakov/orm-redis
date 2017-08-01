@@ -215,13 +215,13 @@ You can use lazy sets/maps in this case:
     await ent.set.add(2);
 
     // Use asyncronyous iterator available in TS 2.3+
-    for await (const v of ent.set) {
+    for await (const v of ent.set.values()) {
         // do something with v
     }
     console.log(await ent.set.size()); // 2
 
     const anotherEnt = await manager.load(Ent, 2);
-    for await (const [key, val] of anotherEnt.map) {
+    for await (const [key, val] of anotherEnt.map.keysAndValues()) {
         // [1, true]
     }
 
@@ -263,7 +263,7 @@ Also it's possible to use RedisLazyMap/RedisLazySet directly:
     await map.set(1, true);
     await map.set(2, false);
 
-    for await (const [key, val] of map) {
+    for await (const [key, val] of map.keysAndValues()) {
         // [1, true], [2, false]
     }
 

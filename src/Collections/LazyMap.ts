@@ -122,7 +122,7 @@ export class LazyMap<K, V> {
      * 
      * @returns 
      */
-    public async *[Symbol.asyncIterator](): AsyncIterableIterator<[K, V]> {
+    public async * keysAndValues(scanCount?: number): AsyncIterableIterator<[K, V]> {
         for (const val of this.map) {
             yield val;
         }

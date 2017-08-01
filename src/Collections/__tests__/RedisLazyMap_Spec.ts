@@ -410,7 +410,7 @@ describe("Iterators", () => {
         expect(vals).toEqual(["test", 10, false, "a"]);
 
         const pairs: any[] = [];
-        for await (const keyVal of map) {
+        for await (const keyVal of map.keysAndValues()) {
             pairs.push(keyVal);
         }
         expect(pairs).toEqual([
@@ -452,7 +452,7 @@ describe("Iterators", () => {
         expect(vals[0]).toBeInstanceOf(A);
 
         const pairs: Array<[number, A]> = [];
-        for await (const keyVal of map) {
+        for await (const keyVal of map.keysAndValues()) {
             pairs.push(keyVal);
         }
         expect(pairs.map(pair => [pair[0], pair[1].id])).toEqual([

@@ -27,7 +27,7 @@ it("It's ordinary promised map", async () => {
     expect(values).toEqual(["test", "test2", "test3"]);
 
     const pairs: Array<[number, string]> = [];
-    for await (const p of map) {
+    for await (const p of map.keysAndValues()) {
         pairs.push(p);
     }
     expect(pairs).toEqual([
