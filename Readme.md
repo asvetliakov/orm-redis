@@ -1,5 +1,13 @@
 # Redis ORM for TypeScript
 
+## Installation
+
+```npm install orm-redis --save```
+
+## In heavy development
+
+Until the library reaches 0.2 version the API may be unstable and can be changed without any notice
+
 ## Features:
 
 * Modern ORM based on decorators & datamapper pattern
