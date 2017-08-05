@@ -1,5 +1,5 @@
 import { Connection, ConnectionOptions } from "../Connection/Connection";
-import { createRedisConnection as createRedisConnectionOriginal } from "../index";
+import { createRedisConnection as createRedisConnectionOriginal, getConnectionManager } from "../index";
 import * as redis from "../utils/PromisedRedis";
 
 
@@ -93,9 +93,8 @@ export async function cleanRedisConnection(connection: Connection): Promise<void
     if (dbNumber) {
         await releaseDatabase(dbNumber);
     }
-    if (connection.isConnected) {
-        await connection.disconnect();
-    }
+    const connManager = getConnectionManager();
+    connManager.removeConnection(connection.name);
 }
 
 /**

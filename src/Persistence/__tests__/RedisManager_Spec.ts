@@ -1546,8 +1546,7 @@ describe("Runs entity subscribers", () => {
             listenTo: () => B,
             beforeSave: jest.fn()
         };
-        const manager = new RedisManager(conn);
-        manager.assignSubscribers([sub1, sub2]);
+        const manager = new RedisManager(conn, [sub1, sub2]);
         const b = new B();
         const a2 = new A();
         a2.id = 2;
@@ -1610,8 +1609,7 @@ describe("Runs entity subscribers", () => {
             listenTo: () => B,
             beforeSave: jest.fn()
         };
-        const manager = new RedisManager(conn);
-        manager.assignSubscribers([sub1, sub2]);
+        const manager = new RedisManager(conn, [sub1, sub2]);
         const b = new B();
 
         await manager.save(b);
@@ -1632,8 +1630,7 @@ describe("Runs entity subscribers", () => {
                 beforeRemove: jest.fn(),
                 afterRemove: jest.fn()
             };
-            const manager = new RedisManager(conn);
-            manager.assignSubscribers([sub]);
+            const manager = new RedisManager(conn, [sub]);
             const a = new A();
             await manager.save(a);
             await manager.remove(a);
@@ -1673,8 +1670,7 @@ describe("Runs entity subscribers", () => {
                 beforeRemove: jest.fn(),
                 afterRemove: jest.fn()
             };
-            const manager = new RedisManager(conn);
-            manager.assignSubscribers([sub]);
+            const manager = new RedisManager(conn, [sub]);
             const a = new A();
             await manager.save(a);
             await manager.remove(a);
@@ -1694,8 +1690,7 @@ describe("Runs entity subscribers", () => {
                 listenTo: () => A,
                 afterLoad: jest.fn()
             };
-            const manager = new RedisManager(conn);
-            manager.assignSubscribers([sub]);
+            const manager = new RedisManager(conn, [sub]);
             const a1 = new A();
             a1.id = 1;
             const a2 = new A();
@@ -1754,8 +1749,7 @@ describe("Runs entity subscribers", () => {
                 listenTo: () => A,
                 afterLoad: afterLoadSpy
             };
-            const manager = new RedisManager(conn);
-            manager.assignSubscribers([innerSub, relSub, aSub]);
+            const manager = new RedisManager(conn, [innerSub, relSub, aSub]);
 
             await manager.save(a);
 

@@ -1,3 +1,5 @@
+import { Constructable } from "../Common/Types";
+
 /**
  * Service container interface
  * 
@@ -5,7 +7,7 @@
  * @interface ContainerInterface
  */
 export interface ContainerInterface {
-    get<T>(cl: { new(...args: any[]): T }): T;
+    get<T>(cl: Constructable<T>): T;
 }
 
 const defaultContainerInstances: Map<Function, any> = new Map();
@@ -39,6 +41,6 @@ export function useContainer(container: ContainerInterface): void {
  * @param cl 
  * @returns 
  */
-export function getFromContainer<T>(cl: { new(...args: any[]): T }): T {
+export function getFromContainer<T>(cl: Constructable<T>): T {
     return usedContainer.get(cl);
 }

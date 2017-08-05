@@ -1,3 +1,4 @@
+import { Constructable } from "../Common/Types";
 import { AlreadyConnectedError } from "../Errors/Errors";
 import { RedisManager } from "../Persistence/RedisManager";
 import { EntitySubscriberInterface } from "../Subscriber/EntitySubscriberInterface";
@@ -18,6 +19,11 @@ export interface ConnectionOptions extends redis.ClientOpts {
 }
 
 export class Connection {
+    /**
+     * Connection name
+     */
+    public readonly name: string;
+
     /**
      * Manager instance
      */
@@ -57,8 +63,12 @@ export class Connection {
     /**
      * Creates an instance of Connection.
      */
-    public constructor() { 
-        this.manager = new RedisManager(this);
+    public constructor(name: string, options: ConnectionOptions) { 
+        this.name = name;
+        this.options = options;
+        const subscribers = this.loadEntitySubscribers(options.entitySubscribers);
+
+        this.manager = new RedisManager(this, subscribers);
     }
     
     /**
@@ -66,22 +76,17 @@ export class Connection {
      * 
      * @param options 
      */
-    public async connect(options: ConnectionOptions): Promise<void> {
+    public async connect(): Promise<void> {
         if (this.isConnected) {
             throw new AlreadyConnectedError();
         }
-        this.options = options;
-        this.client = redis.createClient(options);
-        this.pubsub = redis.createClient(options);
-        try {
-            this.initPubSubListener();
-            const subscribers = this.loadEntitySubscribers(this.options.entitySubscribers);
-            this.manager.assignSubscribers(subscribers);
-            this.isConnected = true;
-        } catch (e) {
-            await this.disconnect();
-            throw e;
-        }
+        // this.options = options;
+        this.client = redis.createClient(this.options);
+        this.pubsub = redis.createClient(this.options);
+        this.isConnected = true;
+        if (typeof this.options.pubSubSubscriber === "function") {
+            this.initPubSubListener(this.options.pubSubSubscriber);
+        } 
     }
 
     /**
@@ -203,33 +208,31 @@ export class Connection {
      * 
      * @private
      */
-    private initPubSubListener(): void {
-        if (typeof this.options.pubSubSubscriber === "function") {
-            const listener = getFromContainer(this.options.pubSubSubscriber);
-            if (listener.onMessage) {
-                this.pubsub.on("message", listener.onMessage.bind(listener));
-            }
-            if (listener.onMessageBuffer) {
-                this.pubsub.on("message_buffer", listener.onMessageBuffer.bind(listener));
-            }
-            if (listener.onPMessage) {
-                this.pubsub.on("pmessage", listener.onPMessage.bind(listener));
-            }
-            if (listener.onPMessageBuffer) {
-                this.pubsub.on("pmessage_buffer", listener.onPMessageBuffer.bind(listener));
-            }
-            if (listener.onSubscribe) {
-                this.pubsub.on("subscribe", listener.onSubscribe.bind(listener));
-            }
-            if (listener.onPSubscribe) {
-                this.pubsub.on("psubscribe", listener.onPSubscribe.bind(listener));
-            }
-            if (listener.onUnsubscribe) {
-                this.pubsub.on("unsubscribe", listener.onUnsubscribe.bind(listener));
-            }
-            if (listener.onPUnsubscribe) {
-                this.pubsub.on("punsubscribe", listener.onPUnsubscribe.bind(listener));
-            }
+    private initPubSubListener(pubSubSubscriber: Constructable<PubSubSubscriberInterface>): void {
+        const listener = getFromContainer(pubSubSubscriber);
+        if (listener.onMessage) {
+            this.pubsub.on("message", listener.onMessage.bind(listener));
+        }
+        if (listener.onMessageBuffer) {
+            this.pubsub.on("message_buffer", listener.onMessageBuffer.bind(listener));
+        }
+        if (listener.onPMessage) {
+            this.pubsub.on("pmessage", listener.onPMessage.bind(listener));
+        }
+        if (listener.onPMessageBuffer) {
+            this.pubsub.on("pmessage_buffer", listener.onPMessageBuffer.bind(listener));
+        }
+        if (listener.onSubscribe) {
+            this.pubsub.on("subscribe", listener.onSubscribe.bind(listener));
+        }
+        if (listener.onPSubscribe) {
+            this.pubsub.on("psubscribe", listener.onPSubscribe.bind(listener));
+        }
+        if (listener.onUnsubscribe) {
+            this.pubsub.on("unsubscribe", listener.onUnsubscribe.bind(listener));
+        }
+        if (listener.onPUnsubscribe) {
+            this.pubsub.on("punsubscribe", listener.onPUnsubscribe.bind(listener));
         }
     }
     

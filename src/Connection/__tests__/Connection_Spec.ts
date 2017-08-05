@@ -22,7 +22,7 @@ describe("With default connection", () => {
 
     it("Throws error if trying to connect again", async () => {
         try {
-            await conn.connect({});
+            await conn.connect();
             throw new ShouldThrowError();
         } catch (e) {
             if (e instanceof ShouldThrowError) { throw e; }
